@@ -6,12 +6,14 @@ namespace UsbDataTransmitter
 {
     internal class Programm
     {
+        
+
         public static void Main()
         {
             Console.WriteLine("Attach usb stick with libusb0 v1.4.0.0 driver on windows.\n");
 
             var deviceList = UsbDevice.AllLibUsbDevices;
-            var usbRegistry = deviceList.Find(x => x.Vid == 0x16C0 && x.Pid == 0x5E1);
+            var usbRegistry = deviceList.Find(x => x.Vid == VID && x.Pid == PID);
             if (usbRegistry == null)
             {
                 Console.WriteLine("Device Not Found.");
@@ -20,10 +22,8 @@ namespace UsbDataTransmitter
             
             usbRegistry.Open(out var selectedDevice);
 
-            // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
-            // it exposes an IUsbDevice interface. If not (WinUSB) the 
-            // 'wholeUsbDevice' variable will be null indicating this is 
-            // an interface of a device; it does not require or support 
+            // If this is a "whole" usb device (libusb-win32, linux libusb-1.0) it exposes an IUsbDevice interface. If not (WinUSB) the 
+            // 'wholeUsbDevice' variable will be null indicating this is an interface of a device; it does not require or support 
             // configuration and interface selection.
             var wholeUsbDevice = selectedDevice as IUsbDevice;
             if (wholeUsbDevice is not null)
@@ -34,7 +34,7 @@ namespace UsbDataTransmitter
                 // Select config #1
                 wholeUsbDevice.SetConfiguration(1);
 
-                // Claim interface #0.
+                // Claim interface #1.
                 wholeUsbDevice.ClaimInterface(1);
 
                 ShowDeviceInfo(wholeUsbDevice);
