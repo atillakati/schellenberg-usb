@@ -141,9 +141,9 @@ public class UsbStick : IDisposable
         ReleaseUnmanagedResources();
         if (disposing)
         {
-            _reader.Dispose();
-            _writer.Dispose();
-            ((IDisposable)_device).Dispose();
+            _reader?.Dispose();
+            _writer?.Dispose();
+            ((IDisposable)_device)?.Dispose();
         }
     }
 }
