@@ -1,37 +1,32 @@
-﻿using System;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text;
 using LibUsbDotNet;
-using LibUsbDotNet.LibUsb;
 using LibUsbDotNet.Main;
-using LibUsbDotNet.Descriptors;
-using LibUsbDotNet.Info;
 
-namespace Examples
+namespace UsbDataTransmitter
 {
     internal class Programm
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
-            UsbDevice selectedDevice = null;
+            Console.WriteLine("Attach usb stick with libusb0 v1.4.0.0 driver on windows.\n");
 
-            //var selectedDevice = UsbDevice.OpenUsbDevice(x => x.Vid == 0x16C0 && x.Pid == 0x5E1);
             var deviceList = UsbDevice.AllLibUsbDevices;
             var usbRegistry = deviceList.Find(x => x.Vid == 0x16C0 && x.Pid == 0x5E1);
             if (usbRegistry == null)
             {
-                throw new Exception("Device Not Found.");
+                Console.WriteLine("Device Not Found.");
+                return;
             }
             
-            usbRegistry.Open(out selectedDevice);
+            usbRegistry.Open(out var selectedDevice);
 
             // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
             // it exposes an IUsbDevice interface. If not (WinUSB) the 
             // 'wholeUsbDevice' variable will be null indicating this is 
             // an interface of a device; it does not require or support 
             // configuration and interface selection.
-            IUsbDevice wholeUsbDevice = selectedDevice as IUsbDevice;
-            if (!ReferenceEquals(wholeUsbDevice, null))
+            var wholeUsbDevice = selectedDevice as IUsbDevice;
+            if (wholeUsbDevice is not null)
             {
                 // This is a "whole" USB device. Before it can be used, 
                 // the desired configuration and interface must be selected.
@@ -46,25 +41,23 @@ namespace Examples
             }
 
             // open read endpoint 1.
-            UsbEndpointReader reader = selectedDevice.OpenEndpointReader(ReadEndpointID.Ep01, 128);
-           
-            
+            var reader = selectedDevice.OpenEndpointReader(ReadEndpointID.Ep01, 128);
+
             // open write endpoint 1.
-            UsbEndpointWriter writer = selectedDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
+            var writer = selectedDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
 
             while (true)
             {
                 Console.Write("Enter command: ");
-                string cmdLine = Console.ReadLine().ToUpper();
+                var cmdLine = Console.ReadLine()?.ToUpper();
 
                 if (!string.IsNullOrEmpty(cmdLine))
                 {
-                    int bytesWritten;
 
                     reader.DataReceived += Reader_DataReceived;
                     reader.DataReceivedEnabled = true;
 
-                    var ec = writer.Write(Encoding.ASCII.GetBytes(cmdLine + "\r\n"), 2000, out bytesWritten);
+                    var ec = writer.Write(Encoding.ASCII.GetBytes(cmdLine + "\r\n"), 2000, out var bytesWritten);
                     Console.WriteLine($"{ec} - {bytesWritten} bytes written");
                     if (ec != ErrorCode.Success)
                     {
@@ -72,8 +65,8 @@ namespace Examples
                     }
 
                     Console.WriteLine("..waiting for answer..");
-                    var LastDataEventDate = DateTime.Now;
-                    while ((DateTime.Now - LastDataEventDate).TotalMilliseconds < 2000)
+                    var lastDataEventDate = DateTime.Now;
+                    while ((DateTime.Now - lastDataEventDate).TotalMilliseconds < 1000)
                     {
                     }
 
@@ -100,11 +93,9 @@ namespace Examples
                     // an interface of a device; it does not require or support 
                     // configuration and interface selection.
                     wholeUsbDevice = selectedDevice as IUsbDevice;
-                    if (!ReferenceEquals(wholeUsbDevice, null))
-                    {
-                        // Release interface #0.
-                        wholeUsbDevice.ReleaseInterface(1);
-                    }
+                    
+                    // Release interface #0.
+                    wholeUsbDevice?.ReleaseInterface(1);
 
                     selectedDevice.Close();
                 }
