@@ -22,7 +22,7 @@ namespace UsbDataTransmitter
                 if (!string.IsNullOrEmpty(cmdLine))
                 {
                     var bytesWritten = usbStick.Write(cmdLine);
-                    Console.WriteLine("Done!");
+                    Console.WriteLine("Done! ({0} bytes)", bytesWritten);
                 }
                 else
                 {
