@@ -89,7 +89,7 @@ public class UsbStick : IDisposable
 
         //Console.WriteLine("..waiting for answer..");
         var lastDataEventDate = DateTime.Now;
-        while ((DateTime.Now - lastDataEventDate).TotalMilliseconds < 1000)
+        while ((DateTime.Now - lastDataEventDate).TotalMilliseconds < 500)
         {
         }
 
@@ -99,6 +99,8 @@ public class UsbStick : IDisposable
 
         return bytesWritten;
     }
+
+    public string DeviceInfo => _device?.Info.ToString() ?? string.Empty;
 
     private void _reader_DataReceived(object? sender, EndpointDataEventArgs e)
     {
