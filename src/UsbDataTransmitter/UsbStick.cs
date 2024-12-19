@@ -80,8 +80,11 @@ public class UsbStick : IDisposable
 
     public int Write(string data)
     {
-        _reader.DataReceived += _reader_DataReceived;
-        _reader.DataReceivedEnabled = true;
+        if (!_reader.DataReceivedEnabled)
+        {
+            _reader.DataReceived += _reader_DataReceived;
+            _reader.DataReceivedEnabled = true;
+        }
 
         var result = _writer.Write(Encoding.ASCII.GetBytes(data + "\r\n"), 1000, out var bytesWritten);
         //Console.WriteLine($"{ec} - {bytesWritten} bytes written");
@@ -94,8 +97,8 @@ public class UsbStick : IDisposable
         }
 
         // Always disable and unhook event when done.
-        _reader.DataReceivedEnabled = false;
-        _reader.DataReceived -= _reader_DataReceived;
+        //_reader.DataReceivedEnabled = false;
+        //_reader.DataReceived -= _reader_DataReceived;
 
         return bytesWritten;
     }
@@ -118,6 +121,9 @@ public class UsbStick : IDisposable
         {
             if (_device.IsOpen)
             {
+                _reader.DataReceivedEnabled = false;
+                _reader.DataReceived -= _reader_DataReceived;
+
                 // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
                 // it exposes an IUsbDevice interface. If not (WinUSB) the 
                 // 'wholeUsbDevice' variable will be null indicating this is 
