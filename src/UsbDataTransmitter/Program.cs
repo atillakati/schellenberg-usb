@@ -5,18 +5,20 @@ namespace UsbDataTransmitter
 {
     internal class Programm
     {
+        private static UsbStick usbStick;
+
         public static void Main()
         {
             Console.WriteLine("Attach usb stick with libusb0 v1.4.0.0 driver on windows.\n");
 
-            var usbStick = new UsbStick();
+            usbStick = new UsbStick();
             usbStick.DataReceived += Reader_DataReceived;
 
             Console.WriteLine(usbStick.DeviceInfo);
 
             while (true)
             {
-                Console.Write("Enter command: ");
+                Console.WriteLine("Enter command: ");
                 var cmdLine = Console.ReadLine()?.ToUpper();
 
                 if (!string.IsNullOrEmpty(cmdLine))
@@ -34,9 +36,32 @@ namespace UsbDataTransmitter
             usbStick.Dispose();
         }
 
+        private static bool isPaired = false;
+
         private static void Reader_DataReceived(object? sender, EndpointDataEventArgs e)
         {
-            Console.WriteLine($"[{DateTime.Now.ToLongTimeString()}] " + Encoding.ASCII.GetString(e.Buffer, 0, e.Count));
+            var receivedData = Encoding.ASCII.GetString(e.Buffer, 0, e.Count);
+        
+            Console.WriteLine($"[{DateTime.Now.ToLongTimeString()}] <- " + receivedData);
+
+
+            if (receivedData.StartsWith("sl") && !isPaired)
+            {
+                var bytesWritten = usbStick.Write("ssA19400000");
+                if (bytesWritten > 0)
+                {
+                    Console.WriteLine($"[{DateTime.Now.ToLongTimeString()}] -> " + "ssA19400000");
+                    isPaired = true;
+                }
+            }
+            //else if (receivedData.StartsWith("t0"))
+            //{
+            //    var bytesWritten = usbStick.Write("ssA19000000");
+            //    if (bytesWritten > 0)
+            //    {
+            //        Console.WriteLine($"[{DateTime.Now.ToLongTimeString()}] -> " + "ssA19000000");
+            //    }
+            //}
         }
     }
 }
