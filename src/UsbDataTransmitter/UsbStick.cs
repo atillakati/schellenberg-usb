@@ -1,19 +1,23 @@
 ﻿using System.Text;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
+using UsbDataTransmitter.Common;
 
 namespace UsbDataTransmitter;
 
 public class UsbStick : IDisposable
 {
+    private readonly Action<string, MessageType> _logAction;
     private const int _VID = 0x16C0;
     private const int _PID = 0x05E1;
     private UsbDevice _device;
     private UsbEndpointReader _reader;
     private UsbEndpointWriter _writer;
 
-    public UsbStick()
+    public UsbStick(Action<string, MessageType> logAction)
     {
+        _logAction = logAction;
+
         _reader = null;
         _writer = null;
         _device = null;
@@ -47,7 +51,7 @@ public class UsbStick : IDisposable
         var usbRegistry = deviceList.Find(x => x.Vid == _VID && x.Pid == _PID);
         if (usbRegistry == null)
         {
-            Console.WriteLine("Device Not Found.");
+            _logAction("Device Not Found.", MessageType.General);
             return;
         }
 
@@ -86,15 +90,21 @@ public class UsbStick : IDisposable
             _reader.DataReceivedEnabled = true;
         }
 
-        var result = _writer.Write(Encoding.ASCII.GetBytes(data + "\r\n"), 1000, out var bytesWritten);
-        //Console.WriteLine($"{ec} - {bytesWritten} bytes written");
-        if (result != ErrorCode.Success) Console.WriteLine("ERROR: " + result + UsbDevice.LastErrorString);
+        var sendMessage = Encoding.ASCII.GetBytes(data.ToUpper() + "\r\n");
+        var result = _writer.Write(sendMessage, 250, out var bytesWritten);
 
-        //Console.WriteLine("..waiting for answer..");
+        if (result != ErrorCode.Success)
+        {
+            _logAction("ERROR: " + result + UsbDevice.LastErrorString, MessageType.General);
+        }
+        else
+        {
+            _logAction(data.ToUpper(), MessageType.Send);
+        }
+
         var lastDataEventDate = DateTime.Now;
         while ((DateTime.Now - lastDataEventDate).TotalMilliseconds < 500)
-        {
-        }
+        {  }
 
         // Always disable and unhook event when done.
         //_reader.DataReceivedEnabled = false;
