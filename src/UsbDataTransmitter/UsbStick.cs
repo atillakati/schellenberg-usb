@@ -95,7 +95,7 @@ public class UsbStick : IDisposable
 
         if (result != ErrorCode.Success)
         {
-            _logAction("ERROR: " + result + UsbDevice.LastErrorString, MessageType.General);
+            _logAction($"ERROR: {result}\n{UsbDevice.LastErrorString}", MessageType.General);
         }
         else
         {
