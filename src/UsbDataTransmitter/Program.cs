@@ -26,7 +26,7 @@ namespace UsbDataTransmitter
             while (true)
             {
                 Console.WriteLine("Enter command: ");
-                var cmdLine = Console.ReadLine()?.ToUpper();
+                var cmdLine = Console.ReadLine();
 
                 if (!string.IsNullOrEmpty(cmdLine))
                 {
@@ -69,23 +69,15 @@ namespace UsbDataTransmitter
         {
             var receivedData = Encoding.ASCII.GetString(e.Buffer, 0, e.Count);
             LogMessage(receivedData, MessageType.Receive);
-            
-            if (receivedData.StartsWith("sl") && !isPaired)
+
+            if (receivedData.StartsWith("sl"))
             {
-                var bytesWritten = usbStick.Write("ssA19400000");
+                var bytesWritten = usbStick.Write("ssA19600000");
                 if (bytesWritten > 0)
                 {
                     isPaired = true;
                 }
             }
-            //else if (receivedData.StartsWith("t0"))
-            //{
-            //    var bytesWritten = usbStick.Write("ssA19000000");
-            //    if (bytesWritten > 0)
-            //    {
-            //        Console.WriteLine($"[{DateTime.Now.ToLongTimeString()}] -> " + "ssA19000000");
-            //    }
-            //}
         }
 
         private static async Task ExecuteCommandOptions(string[] args)
@@ -106,7 +98,7 @@ namespace UsbDataTransmitter
         {
             LogMessage("Initializing RF stick...", MessageType.General);
 
-            usbStick.Write("!g");
+            usbStick.Write("!G");
             Thread.Sleep(200);
             usbStick.Write("!?");
             Thread.Sleep(200);

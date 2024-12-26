@@ -90,7 +90,7 @@ public class UsbStick : IDisposable
             _reader.DataReceivedEnabled = true;
         }
 
-        var sendMessage = Encoding.ASCII.GetBytes(data.ToUpper() + "\r\n");
+        var sendMessage = Encoding.ASCII.GetBytes(data + "\r\n");
         var result = _writer.Write(sendMessage, 250, out var bytesWritten);
 
         if (result != ErrorCode.Success)
@@ -99,7 +99,7 @@ public class UsbStick : IDisposable
         }
         else
         {
-            _logAction(data.ToUpper(), MessageType.Send);
+            _logAction(data, MessageType.Send);
         }
 
         var lastDataEventDate = DateTime.Now;
