@@ -1,17 +1,32 @@
 ﻿using System.Text;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
+using log4net;
+using Microsoft.Extensions.Logging;
 
 namespace UsbDataTransmitter.SchellenbergDevices;
 
 public class UsbStick : IUsbStick
 {
     private readonly Action<string, MessageType> _logAction;
+    private readonly ILogger _logger;
     private const int _VID = 0x16C0;
     private const int _PID = 0x05E1;
     private UsbDevice _device;
     private UsbEndpointReader _reader;
     private UsbEndpointWriter _writer;
+
+    public UsbStick(ILogger logger)
+    {
+        _logger = logger;
+        _logAction = UseLoggerAction;
+
+        _reader = null;
+        _writer = null;
+        _device = null;
+
+        Init();        
+    }    
 
     public UsbStick(Action<string, MessageType> logAction)
     {
@@ -127,6 +142,27 @@ public class UsbStick : IUsbStick
     protected virtual void OnDataReceived(UsbDataReceivedEventArgs e)
     {
         DataReceived?.Invoke(this, e);
+    }
+
+    private void UseLoggerAction(string message, MessageType type)
+    {
+        var msgType = string.Empty;
+
+        switch (type)
+        {
+            case MessageType.Send:
+                msgType = "-> ";
+                break;
+            case MessageType.Receive:
+                msgType = "<- ";
+                break;
+
+            default:
+                msgType = string.Empty;
+                break;
+        }
+
+        _logger.LogInformation($" {msgType}" + message);
     }
 
     private void ReleaseUnmanagedResources()

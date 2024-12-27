@@ -1,16 +1,17 @@
 ﻿using log4net;
+using Microsoft.Extensions.Logging;
 
 namespace UsbDataTransmitter.SchellenbergDevices
 {
     public class DeviceProperty : IDeviceProperty
     {
-        private readonly ILog _log;
+        private readonly ILogger _log;
         private bool _isActive;
         private DateTime _lastChange;
         private string _name;
         private int _command;
 
-        public DeviceProperty(ILog logger, string name, int command)
+        public DeviceProperty(ILogger logger, string name, int command)
         {
             _log = logger;
 
@@ -19,6 +20,9 @@ namespace UsbDataTransmitter.SchellenbergDevices
             _name = name;
             _command = command;
         }
+
+        public DeviceProperty(string name, int command)
+            : this(null, name, command) { }
 
         public DateTime LastChange => _lastChange;
 
@@ -35,7 +39,8 @@ namespace UsbDataTransmitter.SchellenbergDevices
             {
                 _isActive = value;
                 _lastChange = DateTime.Now;
-                _log.Info($"{_name} has changed to {IsActive}");
+
+                _log?.LogInformation($"{_name} has changed to {IsActive}");
             }
         }
     }

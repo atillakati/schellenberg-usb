@@ -30,8 +30,8 @@ namespace UsbDataTransmitter
 
             //create device instance
             device = new Device("265508", 0xA1, "Schellenberg Rollodrive Premium");
-            device.AddProperty(new DeviceProperty(_logger, "up", 0x01));
-            device.AddProperty(new DeviceProperty(_logger, "down", 0x02));
+            device.AddProperty(new DeviceProperty("up", 0x01));
+            device.AddProperty(new DeviceProperty("down", 0x02));
 
             Console.WriteLine(usbStick.DeviceInfo);
 
