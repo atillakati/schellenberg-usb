@@ -1,5 +1,4 @@
-﻿
-namespace UsbDataTransmitter.Common
+﻿namespace UsbDataTransmitter.SchellenbergDevices
 {
     public interface IDeviceProperty
     {

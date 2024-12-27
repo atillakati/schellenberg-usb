@@ -1,17 +1,16 @@
 ﻿using System.Reflection;
 using System.Text;
-using LibUsbDotNet.Main;
 using log4net.Config;
 using log4net;
-using UsbDataTransmitter.Common;
+using UsbDataTransmitter.SchellenbergDevices;
 
 namespace UsbDataTransmitter
 {
     internal class Programm
     {
-        private static UsbStick usbStick;
+        private static IUsbStick usbStick;
         private static bool isPaired = false;
-        private static Device device;
+        private static IDevice device;
         private static ILog _logger;// = log4net.LogManager.GetLogger(typeof(Programm));
 
         public static async Task Main(string[] args)
@@ -84,14 +83,18 @@ namespace UsbDataTransmitter
                     msgType = string.Empty;
                     break;
             }
-
-            //Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss,fff")}] {msgType}" + message);
+                        
             _logger.Info($" {msgType}" + message);
         }
 
-        private static void Reader_DataReceived(object? sender, EndpointDataEventArgs e)
+        private static void Reader_DataReceived(object? sender, UsbDataReceivedEventArgs e)
         {
-            var receivedData = Encoding.ASCII.GetString(e.Buffer, 0, e.Count);
+            if(!e.Count.HasValue || e.Buffer == null)
+            {
+                return;
+            }
+
+            var receivedData = Encoding.ASCII.GetString(e.Buffer, 0, e.Count.Value);
             LogMessage(receivedData, MessageType.Receive);
 
             //pairing

@@ -1,17 +1,16 @@
-﻿
-namespace UsbDataTransmitter.Common
+﻿namespace UsbDataTransmitter.SchellenbergDevices
 {
-    public class Device
+    public class Device : IDevice
     {
         private string _id;
         private int _deviceEnum;
         private string _name;
         private List<IDeviceProperty> _properties;
 
-        public Device(string id, int deviceEnum, string name) 
+        public Device(string id, int deviceEnum, string name)
         {
             _deviceEnum = deviceEnum;
-            _id =id;
+            _id = id;
             _name = name;
 
             _properties = new List<IDeviceProperty>();
@@ -44,26 +43,26 @@ namespace UsbDataTransmitter.Common
         /// <returns></returns>
         public bool UpdateProperty(string receivedRawData)
         {
-            if(string.IsNullOrEmpty(receivedRawData) || receivedRawData.Length != 22)
+            if (string.IsNullOrEmpty(receivedRawData) || receivedRawData.Length != 22)
             {
                 return false;
             }
 
             //string is from right device, check device id
             var id = receivedRawData.Substring(4, 6);
-            if(id != _id)
-            {
-                return false;
-            }
-             
-            //parse command
-            var command = receivedRawData.Substring(14, 2);
-            if (string.IsNullOrEmpty(command)) 
+            if (id != _id)
             {
                 return false;
             }
 
-            if(command == "00") //=stop
+            //parse command
+            var command = receivedRawData.Substring(14, 2);
+            if (string.IsNullOrEmpty(command))
+            {
+                return false;
+            }
+
+            if (command == "00") //=stop
             {
                 //set inactive all props
                 _properties.ForEach(p => p.IsActive = false);
@@ -73,13 +72,13 @@ namespace UsbDataTransmitter.Common
             //update property
             var prop = _properties.FirstOrDefault(p => p.Command == int.Parse(command));
             if (prop != null)
-            {                
-                prop.IsActive = true;   
+            {
+                prop.IsActive = true;
             }
 
             return true;
         }
-        
+
         public void AddProperty(DeviceProperty property)
         {
             if (property == null)
@@ -94,9 +93,9 @@ namespace UsbDataTransmitter.Common
             }
         }
 
-        internal string CreateCommandString(IDeviceProperty prop)
+        public string CreateCommandString(IDeviceProperty prop)
         {
-            if (prop == null) 
+            if (prop == null)
             {
                 return string.Empty;
             }

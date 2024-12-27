@@ -1,6 +1,6 @@
 ﻿using log4net;
 
-namespace UsbDataTransmitter.Common
+namespace UsbDataTransmitter.SchellenbergDevices
 {
     public class DeviceProperty : IDeviceProperty
     {
