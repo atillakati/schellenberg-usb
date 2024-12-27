@@ -9,6 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="LibUsbDotNet" Version="2.2.29" />
+    <PackageReference Include="log4net" Version="3.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
