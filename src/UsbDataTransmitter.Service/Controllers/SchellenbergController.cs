@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using UsbDataTransmitter.Service.Entities;
+using UsbDataTransmitter.Service.StateMachineTypes;
 
 namespace UsbDataTransmitter.Service.Controllers
 {
@@ -8,12 +9,14 @@ namespace UsbDataTransmitter.Service.Controllers
     public class SchellenbergController : ControllerBase
     {
         private readonly ILogger<SchellenbergController> _logger;
-        private readonly ISchellenbergService _schellenbergService;        
+        private readonly ISchellenbergService _schellenbergService;
+        private readonly IStateMachine _stateMachine;
 
-        public SchellenbergController(ILogger<SchellenbergController> logger, ISchellenbergService schellenbergService)
+        public SchellenbergController(ILogger<SchellenbergController> logger, ISchellenbergService schellenbergService, IStateMachine stateMachine)
         {
             _logger = logger;
             _schellenbergService = schellenbergService;
+            _stateMachine = stateMachine;
         }
         
 
@@ -36,15 +39,22 @@ namespace UsbDataTransmitter.Service.Controllers
         {
             _logger.LogInformation("Move() called.");
 
-            if (direction == "up")
+            switch(direction)
             {
-                _schellenbergService.Up();
-            }
-            else if(direction == "down")
-            {
-                _schellenbergService.Down();
-            }
+                case "up":
+                    _stateMachine.FireEvent(Events.MoveUpReceived);
+                    break;
 
+                case "down":
+                    _stateMachine.FireEvent(Events.MoveDownReceived);
+                    break;
+
+                case "stop":
+                    _stateMachine.FireEvent(Events.StopReceived);
+                    break;
+
+            }
+            
             return new DeviceInfo
             {
                 lastUpdate = DateTime.Now,

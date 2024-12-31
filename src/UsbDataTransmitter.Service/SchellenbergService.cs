@@ -10,6 +10,11 @@ namespace UsbDataTransmitter.Service.Controllers
         private readonly IDevice _device;
         private bool _isPaired;
 
+        public event EventHandler<SchellenbergEventArgs> UpMessageReceived;
+        public event EventHandler<SchellenbergEventArgs> DownMessageReceived;
+        public event EventHandler<SchellenbergEventArgs> StopMessageReceived;
+        public event EventHandler<SchellenbergEventArgs> PairingMessageReceived;
+
         public SchellenbergService(ILogger<SchellenbergController> logger)
         {
             _logger = logger;
@@ -22,6 +27,7 @@ namespace UsbDataTransmitter.Service.Controllers
             _device = new Device("265508", 0xA1, "Schellenberg Rollodrive Premium");
             _device.AddProperty(new DeviceProperty(_logger, "up", 0x01));
             _device.AddProperty(new DeviceProperty(_logger, "down", 0x02));
+            _device.AddProperty(new DeviceProperty(_logger, "pair", 0x60));
         }
 
         public string Info
@@ -48,33 +54,23 @@ namespace UsbDataTransmitter.Service.Controllers
 
         public void Up()
         {
-            var cmdProp = _device.Properties.FirstOrDefault(p => p.Name == "up");
-            if (cmdProp == null)
-            {
-                return;
-            }
-
-            var commandString = _device.CreateCommandString(cmdProp);
-            _usbStick.Write(commandString);
-
-            _logger.LogInformation($"Command '{commandString}' send to device.");
-        }
+            ExecuteCommand("up");
+        }        
 
         public void Down()
         {
-            var cmdProp = _device.Properties.FirstOrDefault(p => p.Name == "down");
-            if (cmdProp == null)
-            {
-                return;
-            }
-
-            var commandString = _device.CreateCommandString(cmdProp);
-            _usbStick.Write(commandString);
-
-            _logger.LogInformation($"Command '{commandString}' send to device.");
+            ExecuteCommand("down");
         }
 
-        private async Task InitStick()
+        public void Pair()
+        {
+            ExecuteCommand("pair");
+            _isPaired = true;
+
+            PairingMessageReceived?.Invoke(this, new SchellenbergEventArgs { RawMessage = string.Empty, Paired = _isPaired });
+        }
+
+        public async Task InitStick()
         {
             _logger.LogInformation("Initializing RF stick...", MessageType.General);
 
@@ -85,6 +81,21 @@ namespace UsbDataTransmitter.Service.Controllers
             _usbStick.Write("hello");
             Thread.Sleep(200);
             _usbStick.Write("!?");
+        }
+
+
+        private void ExecuteCommand(string commandName)
+        {
+            var cmdProp = _device.Properties.FirstOrDefault(p => p.Name == commandName);
+            if (cmdProp == null)
+            {
+                return;
+            }
+
+            var commandString = _device.CreateCommandString(cmdProp);
+            _usbStick.Write(commandString);
+
+            _logger.LogInformation($"Command {commandName} => '{commandString}' send to device.");
         }
 
         private void _usbStick_DataReceived(object? sender, UsbDataReceivedEventArgs e)
@@ -100,11 +111,13 @@ namespace UsbDataTransmitter.Service.Controllers
             //pairing
             if (receivedData.StartsWith("sl") && !_isPaired)
             {
-                var bytesWritten = _usbStick.Write("ssA19600000");
-                if (bytesWritten > 0)
-                {
-                    _isPaired = true;
-                }
+                PairingMessageReceived?.Invoke(this, new SchellenbergEventArgs { RawMessage = receivedData, Paired = _isPaired});
+
+                //var bytesWritten = _usbStick.Write("ssA19600000");
+                //if (bytesWritten > 0)
+                //{
+                //    _isPaired = true;
+                //}
             }
             else
             {
@@ -113,6 +126,6 @@ namespace UsbDataTransmitter.Service.Controllers
                     _device.UpdateProperty(receivedData);
                 }                
             }
-        }
+        }        
     }
 }
