@@ -12,5 +12,5 @@ stateDiagram-v2
 	Moving --> Idle : StopReceived
 	Moving --> Idle : StopPressed
 	Pairing --> Idle : Paired
-[*] --> Unknown
+    [*] --> Unknown
 ```
