@@ -12,7 +12,9 @@ namespace UsbDataTransmitter.Service.Controllers
         private readonly ISchellenbergService _schellenbergService;
         private readonly IStateMachine _stateMachine;
 
-        public SchellenbergController(ILogger<SchellenbergController> logger, ISchellenbergService schellenbergService, IStateMachine stateMachine)
+        public SchellenbergController(ILogger<SchellenbergController> logger, 
+                                      ISchellenbergService schellenbergService, 
+                                      IStateMachine stateMachine)
         {
             _logger = logger;
             _schellenbergService = schellenbergService;
@@ -25,12 +27,15 @@ namespace UsbDataTransmitter.Service.Controllers
         {
             _logger.LogInformation("Get() called.");
 
+            _stateMachine.FireEvent(Events.Init);
+
             return new DeviceInfo
             {
                 lastUpdate = DateTime.Now,
                 message = _schellenbergService.Info,
                 name = _schellenbergService.DeviceName,
-                version = "0.1"
+                version = "0.1",
+                fsm_state = _stateMachine.CurrentState
             };
         }
 
@@ -60,7 +65,8 @@ namespace UsbDataTransmitter.Service.Controllers
                 lastUpdate = DateTime.Now,
                 message = $"Move {direction}",
                 name = _schellenbergService.DeviceName,
-                version = "0.1"
+                version = "0.1",
+                fsm_state = _stateMachine.CurrentState
             };
         }        
     }

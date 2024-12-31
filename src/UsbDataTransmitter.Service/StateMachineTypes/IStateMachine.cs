@@ -2,6 +2,8 @@
 {
     public interface IStateMachine
     {
+        string CurrentState { get; }
+
         void FireEvent(Events eventToFire);
     }
 }

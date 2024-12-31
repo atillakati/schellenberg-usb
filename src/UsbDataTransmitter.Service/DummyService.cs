@@ -5,9 +5,9 @@ namespace UsbDataTransmitter.Service
 {
     public class DummyService : ISchellenbergService
     {
-        private readonly ILogger<SchellenbergController> _logger;        
+        private readonly ILogger<DummyService> _logger;        
 
-        public DummyService(ILogger<SchellenbergController> logger)
+        public DummyService(ILogger<DummyService> logger)
         {
             _logger = logger;
             
@@ -16,29 +16,36 @@ namespace UsbDataTransmitter.Service
 
         public string DeviceName => "Dummy Schellengberg Service";
 
-        public event EventHandler<SchellenbergEventArgs> UpMessageReceived;
-        public event EventHandler<SchellenbergEventArgs> DownMessageReceived;
-        public event EventHandler<SchellenbergEventArgs> StopMessageReceived;
+        public event EventHandler<SchellenbergEventArgs> EventReceived;        
         public event EventHandler<SchellenbergEventArgs> PairingMessageReceived;
 
         public void Down()
         {
-            _logger.LogInformation("DummyService - Dummy goes down.");           
+            _logger.LogInformation("DummyService - Dummy goes down.");
+            //EventReceived?.Invoke(this, new SchellenbergEventArgs { CurrentEvent = Events.StopReceived });
         }
 
-        public async Task InitStick()
+        public void InitStick()
         {
-            _logger.LogInformation("DummyService - Initializing...");            
+            _logger.LogInformation("DummyService - Initializing...");
+
+            Task.Run(() =>
+            {
+                Thread.Sleep(500);
+            }).WaitAsync(TimeSpan.FromMilliseconds(2000));
+
+            EventReceived?.Invoke(this, new SchellenbergEventArgs { CurrentEvent = Events.Started });
         }
 
         public void Pair()
-        {
-            throw new NotImplementedException();
+        {            
         }
 
         public void Up()
         {
-            _logger.LogInformation("DummyService - Dummy goes up.");            
+            _logger.LogInformation("DummyService - Dummy goes up.");
+            //EventReceived?.Invoke(this, new SchellenbergEventArgs { CurrentEvent = Events.StopReceived });
+
         }
     }
 }

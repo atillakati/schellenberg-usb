@@ -1,5 +1,7 @@
 # schellenberg-usb
 
+## State Machine definition overview 
+
 ```mermaid
 stateDiagram-v2
 	Unknown --> Starting : Init

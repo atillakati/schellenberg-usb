@@ -8,11 +8,9 @@
         void Down();
         void Up();
         void Pair();
-        Task InitStick();
+        void InitStick();
 
-        event EventHandler<SchellenbergEventArgs> UpMessageReceived;
-        event EventHandler<SchellenbergEventArgs> DownMessageReceived;
-        event EventHandler<SchellenbergEventArgs> StopMessageReceived;
+        event EventHandler<SchellenbergEventArgs> EventReceived;        
         event EventHandler<SchellenbergEventArgs> PairingMessageReceived;
     }
 }

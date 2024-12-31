@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Console;
 using Stateless;
 using UsbDataTransmitter.Service.Controllers;
 using UsbDataTransmitter.Service.StateMachineTypes;
@@ -12,9 +13,17 @@ namespace UsbDataTransmitter.Service
 
             // Add services to the container.
             builder.Services.AddSingleton<ISchellenbergService, DummyService>();
-            builder.Services.AddSingleton(typeof(StateMachine));
+            builder.Services.AddSingleton<IStateMachine, StateMachine>();
 
             builder.Services.AddControllers();
+
+            builder.Logging.AddSimpleConsole(options =>
+            {
+                options.TimestampFormat = "yyyy-MM-dd HH:mm:ss,fff ";
+                options.SingleLine = true;
+                options.IncludeScopes = false;                
+            });
+
 
             var app = builder.Build();           
 

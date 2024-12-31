@@ -10,9 +10,7 @@ namespace UsbDataTransmitter.Service.Controllers
         private readonly IDevice _device;
         private bool _isPaired;
 
-        public event EventHandler<SchellenbergEventArgs> UpMessageReceived;
-        public event EventHandler<SchellenbergEventArgs> DownMessageReceived;
-        public event EventHandler<SchellenbergEventArgs> StopMessageReceived;
+        public event EventHandler<SchellenbergEventArgs> EventReceived;        
         public event EventHandler<SchellenbergEventArgs> PairingMessageReceived;
 
         public SchellenbergService(ILogger<SchellenbergController> logger)
@@ -21,9 +19,7 @@ namespace UsbDataTransmitter.Service.Controllers
 
             _usbStick = new UsbStick(logger);
             _usbStick.DataReceived += _usbStick_DataReceived;
-
-            Task.Run(InitStick).Wait();
-
+            
             _device = new Device("265508", 0xA1, "Schellenberg Rollodrive Premium");
             _device.AddProperty(new DeviceProperty(_logger, "up", 0x01));
             _device.AddProperty(new DeviceProperty(_logger, "down", 0x02));
@@ -70,17 +66,23 @@ namespace UsbDataTransmitter.Service.Controllers
             PairingMessageReceived?.Invoke(this, new SchellenbergEventArgs { RawMessage = string.Empty, Paired = _isPaired });
         }
 
-        public async Task InitStick()
+        public void InitStick()
         {
             _logger.LogInformation("Initializing RF stick...", MessageType.General);
 
-            _usbStick.Write("!G");
-            Thread.Sleep(200);
-            _usbStick.Write("!?");
-            Thread.Sleep(200);
-            _usbStick.Write("hello");
-            Thread.Sleep(200);
-            _usbStick.Write("!?");
+            Task.Run(() =>
+            {
+
+                _usbStick.Write("!G");
+                Thread.Sleep(200);
+                _usbStick.Write("!?");
+                Thread.Sleep(200);
+                _usbStick.Write("hello");
+                Thread.Sleep(200);
+                _usbStick.Write("!?");
+            });
+
+            EventReceived?.Invoke(this, new SchellenbergEventArgs { CurrentEvent = StateMachineTypes.Events.Started });
         }
 
 
