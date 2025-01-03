@@ -1,13 +1,17 @@
-﻿using System.Text;
-using LibUsbDotNet.Main;
-using UsbDataTransmitter.Common;
+﻿using System.Reflection;
+using System.Text;
+using log4net.Config;
+using log4net;
+using UsbDataTransmitter.SchellenbergDevices;
 
 namespace UsbDataTransmitter
 {
     internal class Programm
     {
-        private static UsbStick usbStick;
+        private static IUsbStick usbStick;
         private static bool isPaired = false;
+        private static IDevice device;
+        private static ILog _logger;// = log4net.LogManager.GetLogger(typeof(Programm));
 
         public static async Task Main(string[] args)
         {
@@ -16,12 +20,24 @@ namespace UsbDataTransmitter
             Console.WriteLine("Usage:\nUsbDataTransmitter [-autoInit]");
             Console.WriteLine();
 
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
+            _logger = LogManager.GetLogger(typeof(Programm));
+
             usbStick = new UsbStick(LogMessage);
             usbStick.DataReceived += Reader_DataReceived;
 
+            //create device instance
+            device = new Device("265508", 0xA1, "Schellenberg Rollodrive Premium");
+            device.AddProperty(new DeviceProperty("up", 0x01));
+            device.AddProperty(new DeviceProperty("down", 0x02));
+
             Console.WriteLine(usbStick.DeviceInfo);
 
-            await ExecuteCommandOptions(args);
+            await ExecuteCommandOptions(args);            
+
+            _logger.Info("Application startet...");
 
             while (true)
             {
@@ -30,6 +46,12 @@ namespace UsbDataTransmitter
 
                 if (!string.IsNullOrEmpty(cmdLine))
                 {
+                    var prop = device.Properties.FirstOrDefault(p => p.Name == cmdLine);
+                    if (prop != null)
+                    {
+                        cmdLine = device.CreateCommandString(prop);
+                    }
+
                     var bytesWritten = usbStick.Write(cmdLine);
                     Console.WriteLine("Done! ({0} bytes)", bytesWritten);
                 }
@@ -61,22 +83,32 @@ namespace UsbDataTransmitter
                     msgType = string.Empty;
                     break;
             }
-            
-            Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss,fff")}] {msgType}" + message);
+                        
+            _logger.Info($" {msgType}" + message);
         }
 
-        private static void Reader_DataReceived(object? sender, EndpointDataEventArgs e)
+        private static void Reader_DataReceived(object? sender, UsbDataReceivedEventArgs e)
         {
-            var receivedData = Encoding.ASCII.GetString(e.Buffer, 0, e.Count);
+            if(!e.Count.HasValue || e.Buffer == null)
+            {
+                return;
+            }
+
+            var receivedData = Encoding.ASCII.GetString(e.Buffer, 0, e.Count.Value);
             LogMessage(receivedData, MessageType.Receive);
 
-            if (receivedData.StartsWith("sl"))
+            //pairing
+            if (receivedData.StartsWith("sl") && !isPaired)
             {
                 var bytesWritten = usbStick.Write("ssA19600000");
                 if (bytesWritten > 0)
                 {
                     isPaired = true;
                 }
+            }
+            else
+            {
+                device.UpdateProperty(receivedData);
             }
         }
 
