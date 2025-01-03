@@ -6,6 +6,6 @@
         public DateTime lastUpdate { get; set; }
         public string name { get; set; }
         public string message { get; set; }
-        public object fsm_state { get; internal set; }
+        public string fsm_state { get; set; }
     }
 }

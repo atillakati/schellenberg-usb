@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using UsbDataTransmitter.Service.Entities;
+using UsbDataTransmitter.Service.Services;
 using UsbDataTransmitter.Service.StateMachineTypes;
 
 namespace UsbDataTransmitter.Service.Controllers
@@ -10,24 +11,19 @@ namespace UsbDataTransmitter.Service.Controllers
     {
         private readonly ILogger<SchellenbergController> _logger;
         private readonly ISchellenbergService _schellenbergService;
-        private readonly IStateMachine _stateMachine;
-
+        
         public SchellenbergController(ILogger<SchellenbergController> logger, 
-                                      ISchellenbergService schellenbergService, 
-                                      IStateMachine stateMachine)
+                                      ISchellenbergService schellenbergService)
         {
             _logger = logger;
-            _schellenbergService = schellenbergService;
-            _stateMachine = stateMachine;
+            _schellenbergService = schellenbergService;            
         }
         
 
         [HttpGet]
         public DeviceInfo Get()
         {
-            _logger.LogInformation("Get() called.");
-
-            _stateMachine.FireEvent(Events.Init);
+            _logger.LogInformation("Get() called.");            
 
             return new DeviceInfo
             {
@@ -35,7 +31,7 @@ namespace UsbDataTransmitter.Service.Controllers
                 message = _schellenbergService.Info,
                 name = _schellenbergService.DeviceName,
                 version = "0.1",
-                fsm_state = _stateMachine.CurrentState
+                fsm_state = _schellenbergService.CurrentFsmState.ToString()
             };
         }
 
@@ -47,15 +43,19 @@ namespace UsbDataTransmitter.Service.Controllers
             switch(direction)
             {
                 case "up":
-                    _stateMachine.FireEvent(Events.MoveUpReceived);
+                    _schellenbergService.FireEvent(Events.MoveUpReceived);
                     break;
 
                 case "down":
-                    _stateMachine.FireEvent(Events.MoveDownReceived);
+                    _schellenbergService.FireEvent(Events.MoveDownReceived);
                     break;
 
                 case "stop":
-                    _stateMachine.FireEvent(Events.StopReceived);
+                    _schellenbergService.FireEvent(Events.StopReceived);
+                    break;
+
+                case "pair":
+                    _schellenbergService.FireEvent(Events.PairingStartedReceived);
                     break;
 
             }
@@ -66,7 +66,7 @@ namespace UsbDataTransmitter.Service.Controllers
                 message = $"Move {direction}",
                 name = _schellenbergService.DeviceName,
                 version = "0.1",
-                fsm_state = _stateMachine.CurrentState
+                fsm_state = _schellenbergService.CurrentFsmState.ToString() 
             };
         }        
     }

@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Logging.Console;
-using Stateless;
-using UsbDataTransmitter.Service.Controllers;
-using UsbDataTransmitter.Service.StateMachineTypes;
+using UsbDataTransmitter.SchellenbergDevices;
+using UsbDataTransmitter.Service.Services;
 
 namespace UsbDataTransmitter.Service
 {
@@ -12,8 +10,9 @@ namespace UsbDataTransmitter.Service
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddSingleton<ISchellenbergService, DummyService>();
-            builder.Services.AddSingleton<IStateMachine, StateMachine>();
+            //builder.Services.AddSingleton<IUsbStick, UsbStick>();
+            builder.Services.AddSingleton<IUsbStick, DummyUsbStickImplementation>();
+            builder.Services.AddSingleton<ISchellenbergService, SchellenbergService>();            
 
             builder.Services.AddControllers();
 
