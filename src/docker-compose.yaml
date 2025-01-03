@@ -1,0 +1,10 @@
+
+services:  
+  energymeter:
+    image: atilladocker/schellenberg-web2rf-api:latest
+    container_name: schellenberg-api-service
+    restart: always
+    ports:
+      - 8080:8080
+      
+      
