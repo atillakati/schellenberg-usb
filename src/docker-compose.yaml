@@ -1,7 +1,7 @@
 
 services:  
-  energymeter:
-    image: atilladocker/schellenberg-web2rf-api:latest
+  schellenberg-api-service:
+    image: atilladocker/schellenberg-web2rf-api:0.0.2
     container_name: schellenberg-api-service
     restart: always
     ports:
