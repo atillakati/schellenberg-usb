@@ -1,5 +1,13 @@
 # schellenberg-usb
 
+Control Schellenberg devices using the RF stick. UI is only a REST api which easily can be integrated in any third part system (eg: Home Assistant).
+Project is still under development.
+
+## Docker for RaspberryPI
+
+https://hub.docker.com/repository/docker/atilladocker/schellenberg-web2rf-api
+
+
 ## State Machine definition overview 
 
 ```mermaid
