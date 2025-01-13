@@ -10,8 +10,8 @@ namespace UsbDataTransmitter.Service
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            //builder.Services.AddSingleton<IUsbStick, UsbStick>();
-            builder.Services.AddSingleton<IUsbStick, DummyUsbStickImplementation>();
+            builder.Services.AddSingleton<IUsbStick, UsbStick>();
+            //builder.Services.AddSingleton<IUsbStick, DummyUsbStickImplementation>();
             builder.Services.AddSingleton<ISchellenbergService, SchellenbergService>();            
 
             builder.Services.AddControllers();
