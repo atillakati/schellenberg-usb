@@ -1,10 +1,10 @@
 
 services:  
   schellenberg-api-service:
-    image: atilladocker/schellenberg-web2rf-api:0.0.2
+    image: atilladocker/schellenberg-web2rf-api:0.0.3
     container_name: schellenberg-api-service
     restart: always
     ports:
-      - 8080:8080
+      - 5080:8080
       
       
