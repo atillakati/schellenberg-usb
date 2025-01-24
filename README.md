@@ -27,3 +27,9 @@ stateDiagram-v2
 	Pairing --> Idle : Paired / Function
     [*] --> Unknown
 ```
+
+## Copy docker-compose.yaml file to server using ssh:
+
+```batch 
+scp -O .\docker-compose.yaml root@homeassistant.local:/home/schellenberg-service/
+```

@@ -9,14 +9,14 @@ namespace UsbDataTransmitter.SchellenbergDevices;
 public class UsbStick : IUsbStick
 {
     private readonly Action<string, MessageType> _logAction;
-    private readonly ILogger _logger;
+    private readonly ILogger<UsbStick> _logger;
     private const int _VID = 0x16C0;
     private const int _PID = 0x05E1;
     private UsbDevice _device;
     private UsbEndpointReader _reader;
     private UsbEndpointWriter _writer;
 
-    public UsbStick(ILogger logger)
+    public UsbStick(ILogger<UsbStick> logger)
     {
         _logger = logger;
         _logAction = UseLoggerAction;
@@ -64,6 +64,11 @@ public class UsbStick : IUsbStick
         if (usbRegistry == null)
         {
             _logAction("Device Not Found.", MessageType.General);
+            _logAction($"Anzahl devices: {deviceList.Count}", MessageType.General);
+            foreach (var device in deviceList) 
+            {
+                _logAction($"device: {device}", MessageType.General);
+            }
             return;
         }
 

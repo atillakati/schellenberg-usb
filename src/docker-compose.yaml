@@ -1,10 +1,11 @@
 
 services:  
   schellenberg-api-service:
-    image: atilladocker/schellenberg-web2rf-api:0.0.3
+    image: atilladocker/schellenberg-web2rf-api:0.0.14
     container_name: schellenberg-api-service
     restart: always
     ports:
       - 5080:8080
-      
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
       
