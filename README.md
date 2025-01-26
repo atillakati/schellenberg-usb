@@ -33,3 +33,15 @@ stateDiagram-v2
 ```batch 
 scp -O .\docker-compose.yaml root@homeassistant.local:/home/schellenberg-service/
 ```
+
+# Linux Versionen
+
+Auf dem Raspberry PI 4 mit home assistant ist folgende Linux distribution istalliert:
+```
+NAME="Alpine Linux"
+ID=alpine
+VERSION_ID=3.21.0
+PRETTY_NAME="Alpine Linux v3.21"
+HOME_URL="https://alpinelinux.org/"
+BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+```

@@ -66,6 +66,8 @@ public class UsbStick : IUsbStick
         _logger.LogInformation("Start Init()");
 
         var deviceList = UsbDevice.AllLibUsbDevices;
+
+        //show found devices
         _logger.LogInformation("Found devices: ");
         foreach (LegacyUsbRegistry device in deviceList)
         {
@@ -80,12 +82,7 @@ public class UsbStick : IUsbStick
             return;
         }
 
-        //show found devices
-        foreach (LegacyUsbRegistry device in deviceList)
-        {
-            _logger.LogInformation($"{device.Name} => {device.Vid:x4}:{device.Pid:x4}");
-        }
-
+                       
         usbRegistry.Open(out _device);
 
         // If this is a "whole" usb device (libusb-win32, linux libusb-1.0) it exposes an IUsbDevice interface. If not (WinUSB) the 
@@ -106,7 +103,7 @@ public class UsbStick : IUsbStick
         }
 
         // open read endpoint 1.
-        _reader = _device.OpenEndpointReader(ReadEndpointID.Ep01, 128);
+        _reader = _device.OpenEndpointReader(ReadEndpointID.Ep01, 64);
 
         // open write endpoint 1.
         _writer = _device.OpenEndpointWriter(WriteEndpointID.Ep01);

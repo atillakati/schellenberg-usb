@@ -9,6 +9,7 @@ namespace UsbDataTransmitter.Service.Controllers
     [Route("[controller]")]
     public class SchellenbergController : ControllerBase
     {
+        private const string VERSION = "0.0.20";
         private readonly ILogger<SchellenbergController> _logger;
         private readonly ISchellenbergService _schellenbergService;
         
@@ -30,7 +31,7 @@ namespace UsbDataTransmitter.Service.Controllers
                 lastUpdate = DateTime.Now,
                 message = _schellenbergService.Info,
                 name = _schellenbergService.DeviceName,
-                version = "0.0.20",
+                version = VERSION,
                 fsm_state = _schellenbergService.CurrentFsmState.ToString()
             };
         }
@@ -65,7 +66,7 @@ namespace UsbDataTransmitter.Service.Controllers
                 lastUpdate = DateTime.Now,
                 message = $"Move {direction}",
                 name = _schellenbergService.DeviceName,
-                version = "0.1",
+                version = VERSION,
                 fsm_state = _schellenbergService.CurrentFsmState.ToString() 
             };
         }        
