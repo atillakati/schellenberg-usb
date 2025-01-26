@@ -9,14 +9,14 @@ namespace UsbDataTransmitter.SchellenbergDevices;
 public class UsbStick : IUsbStick
 {
     private readonly Action<string, MessageType> _logAction;
-    private readonly ILogger _logger;
+    private readonly ILogger<UsbStick> _logger;
     private const int _VID = 0x16C0;
     private const int _PID = 0x05E1;
     private UsbDevice _device;
     private UsbEndpointReader _reader;
     private UsbEndpointWriter _writer;
 
-    public UsbStick(ILogger logger)
+    public UsbStick(ILogger<UsbStick> logger)
     {
         _logger = logger;
         _logAction = UseLoggerAction;
@@ -59,12 +59,20 @@ public class UsbStick : IUsbStick
 
     protected void Init()
     {
+        _logger.LogInformation("Start Init()");
+
         var deviceList = UsbDevice.AllLibUsbDevices;
         var usbRegistry = deviceList.Find(x => x.Vid == _VID && x.Pid == _PID);
         if (usbRegistry == null)
         {
             _logAction("Device Not Found.", MessageType.General);
             return;
+        }
+
+        //show found devices
+        foreach (LegacyUsbRegistry device in deviceList)
+        {
+            _logger.LogInformation($"{device.Name} => {device.Vid:x4}:{device.Pid:x4}");
         }
 
         usbRegistry.Open(out _device);
@@ -75,6 +83,7 @@ public class UsbStick : IUsbStick
         var wholeUsbDevice = _device as IUsbDevice;
         if (wholeUsbDevice is not null)
         {
+            _logger.LogInformation("Device is wholeUsbDevice...");
             // This is a "whole" USB device. Before it can be used, 
             // the desired configuration and interface must be selected.
 
@@ -82,9 +91,7 @@ public class UsbStick : IUsbStick
             wholeUsbDevice.SetConfiguration(1);
 
             // Claim interface #1.
-            wholeUsbDevice.ClaimInterface(1);
-
-            //ShowDeviceInfo(wholeUsbDevice);
+            wholeUsbDevice.ClaimInterface(1);            
         }
 
         // open read endpoint 1.

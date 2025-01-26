@@ -30,7 +30,7 @@ namespace UsbDataTransmitter.Service.Controllers
                 lastUpdate = DateTime.Now,
                 message = _schellenbergService.Info,
                 name = _schellenbergService.DeviceName,
-                version = "0.1",
+                version = "0.0.20",
                 fsm_state = _schellenbergService.CurrentFsmState.ToString()
             };
         }
