@@ -9,10 +9,10 @@ else
 
     # Install libusb-1.0-0-dev  
     apt-get update     
-    # apt-get install -y udev systemd
+    apt-get install -y udev systemd
     apt-get install -y usbutils    
     apt-get install -y libusb-1.0-0
-    # apt-get install -y libusb-1.0-0-dev
+    apt-get install -y libusb-1.0-0-dev
     apt-get install nano
     apt-get clean 
     rm -rf /var/lib/apt/lists/*
