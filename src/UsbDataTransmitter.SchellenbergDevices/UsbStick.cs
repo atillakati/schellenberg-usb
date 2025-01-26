@@ -63,7 +63,7 @@ public class UsbStick : IUsbStick
 
     protected void Init()
     {
-        _logger.LogInformation("Starte mit der Initialisierung...");
+        _logger.LogInformation("Start Init()");
 
         var deviceList = UsbDevice.AllLibUsbDevices;
         _logger.LogInformation("Found devices: ");
@@ -80,8 +80,13 @@ public class UsbStick : IUsbStick
             return;
         }
 
-        _logger.LogInformation($"Selected usbRegistry: {usbRegistry.Vid:x4}:{usbRegistry.Pid:x4}, {usbRegistry.FullName}", MessageType.General);
-        usbRegistry.Open(out _device);      
+        //show found devices
+        foreach (LegacyUsbRegistry device in deviceList)
+        {
+            _logger.LogInformation($"{device.Name} => {device.Vid:x4}:{device.Pid:x4}");
+        }
+
+        usbRegistry.Open(out _device);
 
         // If this is a "whole" usb device (libusb-win32, linux libusb-1.0) it exposes an IUsbDevice interface. If not (WinUSB) the 
         // 'wholeUsbDevice' variable will be null indicating this is an interface of a device; it does not require or support 
@@ -89,8 +94,7 @@ public class UsbStick : IUsbStick
         var wholeUsbDevice = _device as IUsbDevice;
         if (wholeUsbDevice is not null)
         {
-            _logger.LogInformation("It is a wholeUsbDevice on Linux...");
-
+            _logger.LogInformation("Device is wholeUsbDevice...");
             // This is a "whole" USB device. Before it can be used, 
             // the desired configuration and interface must be selected.
 
@@ -98,8 +102,7 @@ public class UsbStick : IUsbStick
             wholeUsbDevice.SetConfiguration(1);
 
             // Claim interface #1.
-            wholeUsbDevice.ClaimInterface(0);
-
+            wholeUsbDevice.ClaimInterface(1);            
         }
 
         // open read endpoint 1.
