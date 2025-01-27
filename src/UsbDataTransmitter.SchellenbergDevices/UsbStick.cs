@@ -69,7 +69,7 @@ public class UsbStick : IUsbStick
 
         //show found devices
         _logger.LogInformation("Found devices: ");
-        foreach (LegacyUsbRegistry device in deviceList)
+        foreach (UsbRegistry device in deviceList)
         {
             if (device == null) { continue; }
             _logger.LogInformation($"device: {device.Vid:x4}:{device.Pid:x4}, {device.FullName}", MessageType.General);
@@ -122,14 +122,18 @@ public class UsbStick : IUsbStick
         {
             _reader.DataReceived += _reader_DataReceived;
             _reader.DataReceivedEnabled = true;
-        }
+        }        
 
-        var sendMessage = Encoding.ASCII.GetBytes(data + "\r\n");
+        //var sendMessage = Encoding.ASCII.GetBytes(data + "\r\n");   //works well on win-pc
+        var sendMessage = Encoding.ASCII.GetBytes(data);
         var result = _writer.Write(sendMessage, 250, out var bytesWritten);
+        
 
         if (result != ErrorCode.Success)
         {
-            _logAction($"ERROR: {result}\n{UsbDevice.LastErrorString}", MessageType.General);
+            _logAction($"ERROR result: {result} ErrorString: {UsbDevice.LastErrorString}", MessageType.General);
+            _logAction($"LastErrorNumber: {UsbDevice.LastErrorNumber}", MessageType.General);
+            _logAction("Try to send: " + data, MessageType.Send);
         }
         else
         {

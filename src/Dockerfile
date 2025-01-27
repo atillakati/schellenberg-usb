@@ -23,14 +23,14 @@ RUN dotnet publish "./UsbDataTransmitter.Service.csproj" -c $BUILD_CONFIGURATION
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-arm64v8 AS final
 
 # Copy the entrypoint script
-COPY entrypointscript.sh /entrypointscript.sh
-RUN chmod +x /entrypointscript.sh
+COPY installscript.sh /installscript.sh
+RUN chmod +x /installscript.sh
 
 WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Set the entrypoint
-ENTRYPOINT ["/entrypointscript.sh"]
+ENTRYPOINT ["/installscript.sh"]
 
 # Set the default command
 CMD ["dotnet", "UsbDataTransmitter.Service.dll"]
