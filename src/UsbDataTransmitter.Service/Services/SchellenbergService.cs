@@ -42,7 +42,7 @@ namespace UsbDataTransmitter.Service.Services
                 var info = _usbStick.DeviceInfo;
                 if (string.IsNullOrEmpty(info))
                 {
-                    return "Device not ready.";
+                    info = "Device not ready.";
                 }
 
                 return info;

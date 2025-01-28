@@ -8,5 +8,5 @@ services:
       - 5080:8080
     devices:
       - "/dev/bus/usb:/dev/bus/usb"    
-    privileged: true
+    privileged: false
     

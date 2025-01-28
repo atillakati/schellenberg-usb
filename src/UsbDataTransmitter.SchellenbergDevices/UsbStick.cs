@@ -65,6 +65,8 @@ public class UsbStick : IUsbStick
     {
         _logger.LogInformation("Start Init()");
 
+        UsbDevice.UsbErrorEvent += UsbDevice_UsbErrorEvent;
+
         var deviceList = UsbDevice.AllLibUsbDevices;
 
         //show found devices
@@ -78,12 +80,16 @@ public class UsbStick : IUsbStick
         var usbRegistry = deviceList.Find(x => x.Vid == _VID && x.Pid == _PID);
         if (usbRegistry == null)
         {
-            _logger.LogInformation("Device Not Found.", MessageType.General);            
+            _logger.LogInformation("Device Not Found.", MessageType.General);
             return;
         }
 
-                       
-        usbRegistry.Open(out _device);
+        var res = usbRegistry.Open(out _device);
+        if (!res)
+        {
+            _logger.LogError("Can't open selected device " + usbRegistry.FullName);           
+            return;
+        }
 
         // If this is a "whole" usb device (libusb-win32, linux libusb-1.0) it exposes an IUsbDevice interface. If not (WinUSB) the 
         // 'wholeUsbDevice' variable will be null indicating this is an interface of a device; it does not require or support 
@@ -109,12 +115,17 @@ public class UsbStick : IUsbStick
         _writer = _device.OpenEndpointWriter(WriteEndpointID.Ep01);
     }
 
-    public int Write(string data)
+    private void UsbDevice_UsbErrorEvent(object? sender, UsbError e)
     {
+        _logger.LogError("From UsbDevice_UsbErrorEvent():");
+        _logger.LogError($"ErrorNumber: {e.Win32ErrorNumber} Win32ErrorString: {e.Win32ErrorString} Code: {e.ErrorCode}");
+    }
+
+    public int Write(string data)
+    {        
         if (_reader == null || _writer == null)
         {
-            _logAction("Device not initialised.", MessageType.General);
-
+            _logger.LogError("Device not initialised.");           
             return 0;
         }
 
@@ -122,18 +133,14 @@ public class UsbStick : IUsbStick
         {
             _reader.DataReceived += _reader_DataReceived;
             _reader.DataReceivedEnabled = true;
-        }        
+        }
 
-        //var sendMessage = Encoding.ASCII.GetBytes(data + "\r\n");   //works well on win-pc
-        var sendMessage = Encoding.ASCII.GetBytes(data);
-        var result = _writer.Write(sendMessage, 250, out var bytesWritten);
+        var sendMessage = Encoding.ASCII.GetBytes(data + "\r\n");   //works well on win-pc
         
-
+        var result = _writer.Write(sendMessage, 500, out var bytesWritten);
         if (result != ErrorCode.Success)
         {
-            _logAction($"ERROR result: {result} ErrorString: {UsbDevice.LastErrorString}", MessageType.General);
-            _logAction($"LastErrorNumber: {UsbDevice.LastErrorNumber}", MessageType.General);
-            _logAction("Try to send: " + data, MessageType.Send);
+            _logger.LogError($"ERROR result: {result} ErrorString: {UsbDevice.LastErrorString}[{UsbDevice.LastErrorNumber}]");            
         }
         else
         {
@@ -151,7 +158,7 @@ public class UsbStick : IUsbStick
         return bytesWritten;
     }
 
-    public string DeviceInfo => _device?.Info.ToString() ?? string.Empty;
+    public string DeviceInfo => _device?.DevicePath ?? string.Empty;
 
     private void _reader_DataReceived(object? sender, EndpointDataEventArgs e)
     {
