@@ -4,8 +4,10 @@
     {        
         string DeviceInfo { get; }
 
-        event EventHandler<UsbDataReceivedEventArgs> DataReceived; 
-        
+        event EventHandler<UsbDataReceivedEventArgs> DataReceived;
+
+        //void Init();
+
         int Write(string data);
     }
 }

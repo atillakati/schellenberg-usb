@@ -8,7 +8,10 @@ namespace UsbDataTransmitter.Service.Services
         string DeviceName { get; }
 
         States CurrentFsmState { get; }
-
+      
         void FireEvent(Events eventToFire);
+
+        //void Close();
+        //void Init();
     }
 }
