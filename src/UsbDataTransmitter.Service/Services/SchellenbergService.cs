@@ -42,7 +42,7 @@ namespace UsbDataTransmitter.Service.Services
                 var info = _usbStick.DeviceInfo;
                 if (string.IsNullOrEmpty(info))
                 {
-                    return "Device not ready.";
+                    info = "Device not ready.";
                 }
 
                 return info;
@@ -81,6 +81,7 @@ namespace UsbDataTransmitter.Service.Services
 
             _fsm.Fire(Events.Started);
         }
+        
 
         private void SetupStateMachine()
         {
@@ -168,5 +169,22 @@ namespace UsbDataTransmitter.Service.Services
                 }
             }
         }
+
+        //public void Init()
+        //{
+        //    _usbStick.Init();
+
+        //    Thread.Sleep(1000);
+
+        //    _ = InitStick_Hw();
+
+        //    _fsm.Fire(Events.Started);
+        //}
+
+        //public void Close()
+        //{
+        //    _logger.LogInformation("Close() stick...");
+        //    _usbStick.Dispose();
+        //}
     }
 }
