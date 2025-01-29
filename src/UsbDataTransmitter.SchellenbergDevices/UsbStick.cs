@@ -61,33 +61,31 @@ public class UsbStick : IUsbStick
     public event EventHandler<UsbDataReceivedEventArgs> DataReceived;
 
 
-    protected void Init()
+    private void Init()
     {
         _logger.LogInformation("Start Init()");
 
+        UsbDevice.UsbErrorEvent -= UsbDevice_UsbErrorEvent;
         UsbDevice.UsbErrorEvent += UsbDevice_UsbErrorEvent;
-
-        var deviceList = UsbDevice.AllLibUsbDevices;
-
-        //show found devices
-        _logger.LogInformation("Found devices: ");
-        foreach (UsbRegistry device in deviceList)
-        {
-            if (device == null) { continue; }
-            _logger.LogInformation($"device: {device.Vid:x4}:{device.Pid:x4}, {device.FullName}", MessageType.General);
-        }
-
-        var usbRegistry = deviceList.Find(x => x.Vid == _VID && x.Pid == _PID);
+        
+        //find my device 
+        var usbRegistry = FindDevice();
         if (usbRegistry == null)
         {
             _logger.LogInformation("Device Not Found.", MessageType.General);
             return;
         }
 
+        if (usbRegistry.Device.IsOpen)
+        {
+            _logger.LogWarning("Device is open before I opened it...!");
+        }
+
+        //open device
         var res = usbRegistry.Open(out _device);
         if (!res)
         {
-            _logger.LogError("Can't open selected device " + usbRegistry.FullName);           
+            _logger.LogError("Can't open selected device " + usbRegistry.FullName);
             return;
         }
 
@@ -97,15 +95,13 @@ public class UsbStick : IUsbStick
         var wholeUsbDevice = _device as IUsbDevice;
         if (wholeUsbDevice is not null)
         {
-            _logger.LogInformation("Device is wholeUsbDevice...");
-            // This is a "whole" USB device. Before it can be used, 
-            // the desired configuration and interface must be selected.
+            _logger.LogInformation("Device is a whole UsbDevice...");
 
             // Select config #1
             wholeUsbDevice.SetConfiguration(1);
 
             // Claim interface #1.
-            wholeUsbDevice.ClaimInterface(1);            
+            wholeUsbDevice.ClaimInterface(1);
         }
 
         // open read endpoint 1.
@@ -113,6 +109,22 @@ public class UsbStick : IUsbStick
 
         // open write endpoint 1.
         _writer = _device.OpenEndpointWriter(WriteEndpointID.Ep01);
+    }
+
+    private UsbRegistry FindDevice()
+    {
+        var deviceList = UsbDevice.AllDevices;
+
+        //show found devices        
+        _logger.LogInformation("Found devices: ");
+        foreach (UsbRegistry device in deviceList)
+        {
+            if (device == null) { continue; }
+            _logger.LogInformation($"device: {device.Vid:x4}:{device.Pid:x4}, {device.FullName}", MessageType.General);
+        }
+
+        var usbRegDevice = deviceList.Find(x => x.Vid == _VID && x.Pid == _PID);        
+        return usbRegDevice;
     }
 
     private void UsbDevice_UsbErrorEvent(object? sender, UsbError e)
@@ -131,6 +143,7 @@ public class UsbStick : IUsbStick
 
         if (!_reader.DataReceivedEnabled)
         {
+            _reader.DataReceived -= _reader_DataReceived;
             _reader.DataReceived += _reader_DataReceived;
             _reader.DataReceivedEnabled = true;
         }
@@ -193,6 +206,8 @@ public class UsbStick : IUsbStick
 
     private void ReleaseUnmanagedResources()
     {
+        _logger.LogInformation("Starting method ReleaseUnmanagedResources()");
+
         if (_device != null)
         {
             if (_device.IsOpen)
@@ -211,6 +226,7 @@ public class UsbStick : IUsbStick
                 wholeUsbDevice?.ReleaseInterface(1);
 
                 _device.Close();
+                _logger.LogInformation("Device closed and released....");
             }
 
             // Free usb resources

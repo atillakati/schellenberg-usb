@@ -9,7 +9,7 @@ namespace UsbDataTransmitter.Service.Controllers
     [Route("[controller]")]
     public class SchellenbergController : ControllerBase
     {
-        private const string VERSION = "0.0.26";
+        private const string VERSION = "0.1.0";
         private readonly ILogger<SchellenbergController> _logger;
         private readonly ISchellenbergService _schellenbergService;
         
@@ -24,8 +24,8 @@ namespace UsbDataTransmitter.Service.Controllers
         [HttpGet]
         public DeviceInfo Get()
         {
-            _logger.LogInformation("Get() called.");            
-
+            _logger.LogInformation("Get() called.");
+            
             return new DeviceInfo
             {
                 lastUpdate = DateTime.Now,
@@ -58,6 +58,14 @@ namespace UsbDataTransmitter.Service.Controllers
                 case "pair":
                     _schellenbergService.FireEvent(Events.PairingStartedReceived);
                     break;
+
+                //case "init":
+                //    _schellenbergService.Init();
+                //    break;
+
+                //case "end":
+                //    _schellenbergService.Close();
+                //    break;
 
             }
             

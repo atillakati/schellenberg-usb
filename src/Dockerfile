@@ -34,5 +34,4 @@ ENTRYPOINT ["/installscript.sh"]
 
 # Set the default command
 CMD ["dotnet", "UsbDataTransmitter.Service.dll"]
-# ENTRYPOINT ["dotnet", "UsbDataTransmitter.Service.dll"]
 

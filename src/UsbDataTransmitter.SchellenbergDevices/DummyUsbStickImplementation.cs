@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace UsbDataTransmitter.SchellenbergDevices
 {
@@ -25,5 +26,10 @@ namespace UsbDataTransmitter.SchellenbergDevices
             _logger.LogInformation($".... Write {data}");
             return data.Length;
         }
+
+        //public void Init()
+        //{
+        //    _logger.LogInformation("Starting with dummy init sequence..");
+        //}
     }
 }
