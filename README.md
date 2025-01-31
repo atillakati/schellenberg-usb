@@ -1,7 +1,10 @@
 # schellenberg-usb
 
-Control Schellenberg devices using the RF stick. UI is only a REST api which easily can be integrated in any third part system (eg: Home Assistant).
-Project is still under development.
+The aim is to control a Schellenberg belt winder with the Schellenberg RF-Stick. UI is only a REST interface, which can be easily integrated into any third party system (e.g.: Home Assistant). 
+The application that communicates directly with the USB RF Stick was developed in C# .NET 8.0. The Nuget LibUsbDotNet was used for USB communication. This ensures that the solution can be run platform-independently.
+The solution was developed in a Windows environment and will ultimately run dockerized on a Raspberry PI (Linux).
+
+The project is still under development.
 
 ## State Machine definition overview 
 
@@ -99,8 +102,10 @@ sudo reboot
 ### Copy docker-compose.yaml file to server using ssh:
 
 ```batch 
-scp -O .\docker-compose.yaml root@homeassistant.local:/home/schellenberg-service/
+scp -O .\docker-compose.yaml <user>@<hostip>:/home/schellenberg-service/
 ```
+
+You can also create your own docker-compose.yaml file:
 
 ### Content of the docker compose file
 ```yaml
