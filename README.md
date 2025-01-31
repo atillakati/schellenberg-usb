@@ -4,7 +4,12 @@ The aim is to control a Schellenberg belt winder with the Schellenberg RF-Stick.
 The application that communicates directly with the USB RF Stick was developed in C# .NET 8.0. The Nuget LibUsbDotNet was used for USB communication. This ensures that the solution can be run platform-independently.
 The solution was developed in a Windows environment and will ultimately run dockerized on a Raspberry PI (Linux).
 
-The project is still under development.
+The following HW components were used and tested for the development:
+- Schellenberg Rollodrive 75 premium (DE 22576)
+- Schellenberg radio stick (DE 21009)
+
+The development was only possible thanks to the friendly support of https://github.com/LoPablo. His research into the protocol is the basis on which I was able to build this solution (see https://github.com/Hypfer/schellenberg-qivicon-usb).
+Even though the basic functionalities are currently implemented, this project is still under development. I am grateful for any constructive feedback.
 
 ## State Machine definition overview 
 
