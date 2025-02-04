@@ -8,7 +8,7 @@ The following HW components were used and tested for the development:
 - Schellenberg Rollodrive 75 premium (DE 22576)
 - Schellenberg radio stick (DE 21009)
 
-The development was only possible thanks to the friendly support of [LoPablo](https://github.com/LoPablo) and [Hypfer](https://github.com/Hypfer). Their research into the protocol is the base on which I was able to build this solution (see [schellenberg-qivicon-usb](https://github.com/Hypfer/schellenberg-qivicon-usb)).
+The development was only possible thanks to the friendly support of [@LoPablo](https://github.com/LoPablo) and [@Hypfer](https://github.com/Hypfer). Their research into the protocol is the base on which I was able to build this solution (see [schellenberg-qivicon-usb](https://github.com/Hypfer/schellenberg-qivicon-usb)).
 
 Even though the basic functionalities are currently implemented, this project is still under development. I am grateful for any constructive feedback.
 
