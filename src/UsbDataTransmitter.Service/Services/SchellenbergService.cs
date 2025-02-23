@@ -101,23 +101,50 @@ namespace UsbDataTransmitter.Service.Services
                 .OnEntryFrom(Events.StopPressed, () => ExecuteCommand("stop"))
                 .OnEntryFrom(Events.StopReceived, () => ExecuteCommand("stop"))
                 .OnEntryFrom(Events.Paired, () => ExecuteCommand("stop"))
-                .Permit(Events.MoveUpReceived, States.Moving)
-                .Permit(Events.MoveDownReceived, States.Moving)
-                .Permit(Events.MoveUpPressed, States.Moving)
-                .Permit(Events.MoveDownPressed, States.Moving);
+                .Permit(Events.MoveUpReceived, States.Opening)
+                .Permit(Events.MoveDownReceived, States.Closing)
+                .Permit(Events.MoveUpPressed, States.Opening)
+                .Permit(Events.MoveDownPressed, States.Closing);
 
             _fsm.Configure(States.Idle).Permit(Events.PairingStartedReceived, States.Pairing);
 
-            _fsm.Configure(States.Moving)
+            _fsm.Configure(States.Opening)
                 .OnEntryFrom(Events.MoveUpReceived, () => ExecuteCommand("up"))
-                .OnEntryFrom(Events.MoveUpPressed, () => ExecuteCommand("up"))
-                .OnEntryFrom(Events.MoveDownReceived, () => ExecuteCommand("down"))
-                .OnEntryFrom(Events.MoveDownPressed, () => ExecuteCommand("down"))
-                .Permit(Events.StopReceived, States.Idle)
-                .PermitReentry(Events.MoveDownPressed)
-                .PermitReentry(Events.MoveDownReceived)
+                .OnEntryFrom(Events.MoveUpPressed, () => ExecuteCommand("up"))                
+                .Permit(Events.StopReceived, States.Open)
+                .Permit(Events.StopPressed, States.Open)
                 .PermitReentry(Events.MoveUpPressed)
                 .PermitReentry(Events.MoveUpReceived);
+
+            _fsm.Configure(States.Open)
+                .OnEntryFrom(Events.StopReceived, () => ExecuteCommand("stop"))
+                .OnEntryFrom(Events.StopPressed, () => ExecuteCommand("stop"))
+                .Permit(Events.MoveDownPressed, States.Closing)
+                .Permit(Events.MoveDownReceived, States.Closing)
+                .Permit(Events.MoveUpPressed, States.Opening)
+                .Permit(Events.MoveUpReceived, States.Opening)
+                .Permit(Events.PairingStartedReceived, States.Pairing)
+                .PermitReentry(Events.StopPressed)
+                .PermitReentry(Events.StopReceived);
+
+            _fsm.Configure(States.Closed)
+                .OnEntryFrom(Events.StopReceived, () => ExecuteCommand("stop"))
+                .OnEntryFrom(Events.StopPressed, () => ExecuteCommand("stop"))
+                .Permit(Events.MoveDownPressed, States.Closing)
+                .Permit(Events.MoveDownReceived, States.Closing)
+                .Permit(Events.MoveUpPressed, States.Opening)
+                .Permit(Events.MoveUpReceived, States.Opening)
+                .Permit(Events.PairingStartedReceived, States.Pairing)
+                .PermitReentry(Events.StopPressed)
+                .PermitReentry(Events.StopReceived);
+
+            _fsm.Configure(States.Closing)                
+                .OnEntryFrom(Events.MoveDownReceived, () => ExecuteCommand("down"))
+                .OnEntryFrom(Events.MoveDownPressed, () => ExecuteCommand("down"))
+                .Permit(Events.StopReceived, States.Closed)
+                .Permit(Events.StopPressed, States.Closed)
+                .PermitReentry(Events.MoveDownPressed)
+                .PermitReentry(Events.MoveDownReceived);
 
             _fsm.Configure(States.Pairing)
                 .OnEntry(() => ExecuteCommand("pair"))
@@ -169,22 +196,6 @@ namespace UsbDataTransmitter.Service.Services
                 }
             }
         }
-
-        //public void Init()
-        //{
-        //    _usbStick.Init();
-
-        //    Thread.Sleep(1000);
-
-        //    _ = InitStick_Hw();
-
-        //    _fsm.Fire(Events.Started);
-        //}
-
-        //public void Close()
-        //{
-        //    _logger.LogInformation("Close() stick...");
-        //    _usbStick.Dispose();
-        //}
+        
     }
 }

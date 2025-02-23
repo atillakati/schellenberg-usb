@@ -4,7 +4,10 @@
     {
         Starting,
         Idle,
-        Moving,
+        Closed,
+        Closing,
+        Opening,
+        Open,
         Pairing,
         Unknown
     }
