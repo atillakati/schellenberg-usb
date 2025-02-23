@@ -9,7 +9,7 @@ namespace UsbDataTransmitter.Service.Controllers
     [Route("[controller]")]
     public class SchellenbergController : ControllerBase
     {
-        private const string VERSION = "0.1.0";
+        private const string VERSION = "0.2.0";
         private readonly ILogger<SchellenbergController> _logger;
         private readonly ISchellenbergService _schellenbergService;
         
