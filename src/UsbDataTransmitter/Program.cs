@@ -1,80 +1,59 @@
-﻿using System.Text;
-using LibUsbDotNet;
-using LibUsbDotNet.Main;
+﻿using System.Reflection;
+using System.Text;
+using log4net.Config;
+using log4net;
+using UsbDataTransmitter.SchellenbergDevices;
 
 namespace UsbDataTransmitter
 {
     internal class Programm
     {
-        public static void Main()
+        private static IUsbStick usbStick;
+        private static bool isPaired = false;
+        private static IDevice device;
+        private static ILog _logger;// = log4net.LogManager.GetLogger(typeof(Programm));
+
+        public static async Task Main(string[] args)
         {
-            Console.WriteLine("Attach usb stick with libusb0 v1.4.0.0 driver on windows.\n");
+            Console.WriteLine("\r\n _   _     _    ______      _      _____                             _ _   _             \r\n| | | |   | |   |  _  \\    | |    |_   _|                           (_) | | |            \r\n| | | |___| |__ | | | |__ _| |_ __ _| |_ __ __ _ _ __  ___ _ __ ___  _| |_| |_ ___ _ __  \r\n| | | / __| '_ \\| | | / _` | __/ _` | | '__/ _` | '_ \\/ __| '_ ` _ \\| | __| __/ _ \\ '__| \r\n| |_| \\__ \\ |_) | |/ / (_| | || (_| | | | | (_| | | | \\__ \\ | | | | | | |_| ||  __/ |    \r\n \\___/|___/_.__/|___/ \\__,_|\\__\\__,_\\_/_|  \\__,_|_| |_|___/_| |_| |_|_|\\__|\\__\\___|_|    \r\n                                                                                         \r\n                                                                                         ");
+            Console.WriteLine("Attach usb stick with libusb0 v1.4.0.0 driver on windows.");
+            Console.WriteLine("Usage:\nUsbDataTransmitter [-autoInit]");
+            Console.WriteLine();
 
-            var deviceList = UsbDevice.AllLibUsbDevices;
-            var usbRegistry = deviceList.Find(x => x.Vid == 0x16C0 && x.Pid == 0x5E1);
-            if (usbRegistry == null)
-            {
-                Console.WriteLine("Device Not Found.");
-                return;
-            }
-            
-            usbRegistry.Open(out var selectedDevice);
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
-            // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
-            // it exposes an IUsbDevice interface. If not (WinUSB) the 
-            // 'wholeUsbDevice' variable will be null indicating this is 
-            // an interface of a device; it does not require or support 
-            // configuration and interface selection.
-            var wholeUsbDevice = selectedDevice as IUsbDevice;
-            if (wholeUsbDevice is not null)
-            {
-                // This is a "whole" USB device. Before it can be used, 
-                // the desired configuration and interface must be selected.
+            _logger = LogManager.GetLogger(typeof(Programm));
 
-                // Select config #1
-                wholeUsbDevice.SetConfiguration(1);
+            usbStick = new UsbStick(LogMessage);
+            usbStick.DataReceived += Reader_DataReceived;
 
-                // Claim interface #0.
-                wholeUsbDevice.ClaimInterface(1);
+            //create device instance
+            device = new Device("265508", 0xA1, "Schellenberg Rollodrive Premium");
+            device.AddProperty(new DeviceProperty("up", 0x01));
+            device.AddProperty(new DeviceProperty("down", 0x02));
 
-                ShowDeviceInfo(wholeUsbDevice);
-            }
+            Console.WriteLine(usbStick.DeviceInfo);
 
-            // open read endpoint 1.
-            var reader = selectedDevice.OpenEndpointReader(ReadEndpointID.Ep01, 128);
+            await ExecuteCommandOptions(args);            
 
-            // open write endpoint 1.
-            var writer = selectedDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
+            _logger.Info("Application startet...");
 
             while (true)
             {
-                Console.Write("Enter command: ");
-                var cmdLine = Console.ReadLine()?.ToUpper();
+                Console.WriteLine("Enter command: ");
+                var cmdLine = Console.ReadLine();
 
                 if (!string.IsNullOrEmpty(cmdLine))
                 {
-
-                    reader.DataReceived += Reader_DataReceived;
-                    reader.DataReceivedEnabled = true;
-
-                    var ec = writer.Write(Encoding.ASCII.GetBytes(cmdLine + "\r\n"), 2000, out var bytesWritten);
-                    Console.WriteLine($"{ec} - {bytesWritten} bytes written");
-                    if (ec != ErrorCode.Success)
+                    var prop = device.Properties.FirstOrDefault(p => p.Name == cmdLine);
+                    if (prop != null)
                     {
-                        Console.WriteLine("ERROR: " + ec.ToString() + UsbDevice.LastErrorString);
+                        cmdLine = device.CreateCommandString(prop);
                     }
 
-                    Console.WriteLine("..waiting for answer..");
-                    var lastDataEventDate = DateTime.Now;
-                    while ((DateTime.Now - lastDataEventDate).TotalMilliseconds < 1000)
-                    {
-                    }
-
-                    // Always disable and unhook event when done.
-                    reader.DataReceivedEnabled = false;
-                    reader.DataReceived -= Reader_DataReceived;
-
-                    Console.WriteLine("Done!");
+                    var bytesWritten = usbStick.Write(cmdLine);
+                    Console.WriteLine("Done! ({0} bytes)", bytesWritten);
                 }
                 else
                 {
@@ -82,38 +61,82 @@ namespace UsbDataTransmitter
                 }
             }
 
-            if (selectedDevice != null)
+            usbStick.DataReceived -= Reader_DataReceived;
+            usbStick.Dispose();
+        }
+
+
+        private static void LogMessage(string message, MessageType type)
+        {
+            var msgType = string.Empty;
+
+            switch (type)
             {
-                Console.WriteLine("Free usb resources...");
-                if (selectedDevice.IsOpen)
+                case MessageType.Send:
+                    msgType = "-> ";
+                    break;
+                case MessageType.Receive:
+                    msgType = "<- ";
+                    break;
+
+                default:
+                    msgType = string.Empty;
+                    break;
+            }
+                        
+            _logger.Info($" {msgType}" + message);
+        }
+
+        private static void Reader_DataReceived(object? sender, UsbDataReceivedEventArgs e)
+        {
+            if(!e.Count.HasValue || e.Buffer == null)
+            {
+                return;
+            }
+
+            var receivedData = Encoding.ASCII.GetString(e.Buffer, 0, e.Count.Value);
+            LogMessage(receivedData, MessageType.Receive);
+
+            //pairing
+            if (receivedData.StartsWith("sl") && !isPaired)
+            {
+                var bytesWritten = usbStick.Write("ssA19600000");
+                if (bytesWritten > 0)
                 {
-                    // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
-                    // it exposes an IUsbDevice interface. If not (WinUSB) the 
-                    // 'wholeUsbDevice' variable will be null indicating this is 
-                    // an interface of a device; it does not require or support 
-                    // configuration and interface selection.
-                    wholeUsbDevice = selectedDevice as IUsbDevice;
-                    
-                    // Release interface #0.
-                    wholeUsbDevice?.ReleaseInterface(1);
-
-                    selectedDevice.Close();
+                    isPaired = true;
                 }
-                selectedDevice = null;
-
-                // Free usb resources
-                UsbDevice.Exit();
+            }
+            else
+            {
+                device.UpdateProperty(receivedData);
             }
         }
 
-        private static void Reader_DataReceived(object? sender, EndpointDataEventArgs e)
+        private static async Task ExecuteCommandOptions(string[] args)
         {
-            Console.WriteLine("Data received: " + Encoding.Default.GetString(e.Buffer, 0, e.Count));
+            if (args.Length > 0)
+            {
+                //get command
+                switch (args[0])
+                {
+                    case "-autoInit":
+                        await InitStick();
+                        break;
+                }
+            }
         }
 
-        private static void ShowDeviceInfo(IUsbDevice selectedDevice)
+        private static async Task InitStick()
         {
-            Console.WriteLine($"{selectedDevice.Info}");
+            LogMessage("Initializing RF stick...", MessageType.General);
+
+            usbStick.Write("!G");
+            Thread.Sleep(200);
+            usbStick.Write("!?");
+            Thread.Sleep(200);
+            usbStick.Write("hello");
+            Thread.Sleep(200);
+            usbStick.Write("!?");
         }
     }
 }

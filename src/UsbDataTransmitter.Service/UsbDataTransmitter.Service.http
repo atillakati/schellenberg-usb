@@ -1,0 +1,21 @@
+@UsbDataTransmitter.Service_HostAddress = http://localhost:5207
+
+GET {{UsbDataTransmitter.Service_HostAddress}}/schellenberg/
+Accept: application/json
+
+###
+
+GET {{UsbDataTransmitter.Service_HostAddress}}/schellenberg/up
+Accept: application/json
+
+###
+
+GET {{UsbDataTransmitter.Service_HostAddress}}/schellenberg/down
+Accept: application/json
+
+### test
+
+GET {{UsbDataTransmitter.Service_HostAddress}}/schellenberg/stop
+Accept: application/json
+
+### 
