@@ -115,17 +115,16 @@ You can also create your own docker-compose.yaml file:
 
 ### Content of the docker compose file
 ```yaml
-services:  
+services:
   schellenberg-api-service:
-    image: atilladocker/schellenberg-web2rf-api:0.1.0
+    image: atilladocker/schellenberg-web2rf-api:0.2.0
     container_name: schellenberg-api-service
     restart: always
     ports:
       - 5080:8080
     devices:
-      - "/dev/bus/usb:/dev/bus/usb"    
+      - "/dev/bus/usb:/dev/bus/usb"
     privileged: true
-    
 ```
 
 ### Start container
