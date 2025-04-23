@@ -1,21 +1,16 @@
-﻿using System.Collections.ObjectModel;
-using System.Text;
+﻿using System.Text;
 using LibUsbDotNet;
-using LibUsbDotNet.LibUsb;
-using LibUsbDotNet.Info;
 using LibUsbDotNet.Main;
-using log4net;
-using log4net.Util;
 using Microsoft.Extensions.Logging;
 
 namespace UsbDataTransmitter.SchellenbergDevices;
 
 public class UsbStick : IUsbStick
 {
-    private readonly Action<string, MessageType> _logAction;
-    private readonly ILogger<UsbStick> _logger;
     private const int _VID = 0x16C0;
     private const int _PID = 0x05E1;
+    private readonly Action<string, MessageType> _logAction;
+    private readonly ILogger<UsbStick> _logger;
     private UsbDevice _device;
     private UsbEndpointReader _reader;
     private UsbEndpointWriter _writer;
@@ -35,6 +30,7 @@ public class UsbStick : IUsbStick
     public UsbStick(Action<string, MessageType> logAction)
     {
         _logAction = logAction;
+        _logger = new ConsoleLogger(logAction);
 
         _reader = null;
         _writer = null;
@@ -53,12 +49,50 @@ public class UsbStick : IUsbStick
         GC.SuppressFinalize(this);
     }
 
+    public event EventHandler<UsbDataReceivedEventArgs> DataReceived;
+
+    public int Write(string data)
+    {
+        if (_reader == null || _writer == null)
+        {
+            _logger.LogError("Device not initialised.");
+            return 0;
+        }
+
+        if (!_reader.DataReceivedEnabled)
+        {
+            _reader.DataReceived -= _reader_DataReceived;
+            _reader.DataReceived += _reader_DataReceived;
+            _reader.DataReceivedEnabled = true;
+        }
+
+        var sendMessage = Encoding.ASCII.GetBytes(data + "\r\n"); //works well on win-pc
+
+        var result = _writer.Write(sendMessage, 500, out var bytesWritten);
+        if (result != ErrorCode.Success)
+            _logger.LogError(
+                $"ERROR result: {result} ErrorString: {UsbDevice.LastErrorString}[{UsbDevice.LastErrorNumber}]");
+        else
+            _logAction(data, MessageType.Send);
+
+        var lastDataEventDate = DateTime.Now;
+        while ((DateTime.Now - lastDataEventDate).TotalMilliseconds < 500)
+        {
+        }
+
+        // Always disable and unhook event when done.
+        //_reader.DataReceivedEnabled = false;
+        //_reader.DataReceived -= _reader_DataReceived;
+
+        return bytesWritten;
+    }
+
+    public string DeviceInfo => _device?.DevicePath ?? string.Empty;
+
     ~UsbStick()
     {
         Dispose(false);
     }
-
-    public event EventHandler<UsbDataReceivedEventArgs> DataReceived;
 
 
     private void Init()
@@ -67,7 +101,7 @@ public class UsbStick : IUsbStick
 
         UsbDevice.UsbErrorEvent -= UsbDevice_UsbErrorEvent;
         UsbDevice.UsbErrorEvent += UsbDevice_UsbErrorEvent;
-        
+
         //find my device 
         var usbRegistry = FindDevice();
         if (usbRegistry == null)
@@ -76,10 +110,7 @@ public class UsbStick : IUsbStick
             return;
         }
 
-        if (usbRegistry.Device.IsOpen)
-        {
-            _logger.LogWarning("Device is open before I opened it...!");
-        }
+        if (usbRegistry.Device.IsOpen) _logger.LogWarning("Device is open before I opened it...!");
 
         //open device
         var res = usbRegistry.Open(out _device);
@@ -119,59 +150,20 @@ public class UsbStick : IUsbStick
         _logger.LogInformation("Found devices: ");
         foreach (UsbRegistry device in deviceList)
         {
-            if (device == null) { continue; }
+            if (device == null) continue;
             _logger.LogInformation($"device: {device.Vid:x4}:{device.Pid:x4}, {device.FullName}", MessageType.General);
         }
 
-        var usbRegDevice = deviceList.Find(x => x.Vid == _VID && x.Pid == _PID);        
+        var usbRegDevice = deviceList.Find(x => x.Vid == _VID && x.Pid == _PID);
         return usbRegDevice;
     }
 
     private void UsbDevice_UsbErrorEvent(object? sender, UsbError e)
     {
         _logger.LogError("From UsbDevice_UsbErrorEvent():");
-        _logger.LogError($"ErrorNumber: {e.Win32ErrorNumber} Win32ErrorString: {e.Win32ErrorString} Code: {e.ErrorCode}");
+        _logger.LogError(
+            $"ErrorNumber: {e.Win32ErrorNumber} Win32ErrorString: {e.Win32ErrorString} Code: {e.ErrorCode}");
     }
-
-    public int Write(string data)
-    {        
-        if (_reader == null || _writer == null)
-        {
-            _logger.LogError("Device not initialised.");           
-            return 0;
-        }
-
-        if (!_reader.DataReceivedEnabled)
-        {
-            _reader.DataReceived -= _reader_DataReceived;
-            _reader.DataReceived += _reader_DataReceived;
-            _reader.DataReceivedEnabled = true;
-        }
-
-        var sendMessage = Encoding.ASCII.GetBytes(data + "\r\n");   //works well on win-pc
-        
-        var result = _writer.Write(sendMessage, 500, out var bytesWritten);
-        if (result != ErrorCode.Success)
-        {
-            _logger.LogError($"ERROR result: {result} ErrorString: {UsbDevice.LastErrorString}[{UsbDevice.LastErrorNumber}]");            
-        }
-        else
-        {
-            _logAction(data, MessageType.Send);
-        }
-
-        var lastDataEventDate = DateTime.Now;
-        while ((DateTime.Now - lastDataEventDate).TotalMilliseconds < 500)
-        { }
-
-        // Always disable and unhook event when done.
-        //_reader.DataReceivedEnabled = false;
-        //_reader.DataReceived -= _reader_DataReceived;
-
-        return bytesWritten;
-    }
-
-    public string DeviceInfo => _device?.DevicePath ?? string.Empty;
 
     private void _reader_DataReceived(object? sender, EndpointDataEventArgs e)
     {

@@ -13,6 +13,8 @@ namespace UsbDataTransmitter
         private static IDevice device;
         private static ILog _logger;// = log4net.LogManager.GetLogger(typeof(Programm));
 
+        private const int DeviceEnumerator = 0xA1;
+
         public static async Task Main(string[] args)
         {
             Console.WriteLine("\r\n _   _     _    ______      _      _____                             _ _   _             \r\n| | | |   | |   |  _  \\    | |    |_   _|                           (_) | | |            \r\n| | | |___| |__ | | | |__ _| |_ __ _| |_ __ __ _ _ __  ___ _ __ ___  _| |_| |_ ___ _ __  \r\n| | | / __| '_ \\| | | / _` | __/ _` | | '__/ _` | '_ \\/ __| '_ ` _ \\| | __| __/ _ \\ '__| \r\n| |_| \\__ \\ |_) | |/ / (_| | || (_| | | | | (_| | | | \\__ \\ | | | | | | |_| ||  __/ |    \r\n \\___/|___/_.__/|___/ \\__,_|\\__\\__,_\\_/_|  \\__,_|_| |_|___/_| |_| |_|_|\\__|\\__\\___|_|    \r\n                                                                                         \r\n                                                                                         ");
@@ -29,9 +31,10 @@ namespace UsbDataTransmitter
             usbStick.DataReceived += Reader_DataReceived;
 
             //create device instance
-            device = new Device("265508", 0xA1, "Schellenberg Rollodrive Premium");
+            device = new Device("265508", DeviceEnumerator, "Schellenberg Rollodrive Premium");
             device.AddProperty(new DeviceProperty("up", 0x01));
             device.AddProperty(new DeviceProperty("down", 0x02));
+            device.AddProperty(new DeviceProperty("pair", 0x60));
 
             Console.WriteLine(usbStick.DeviceInfo);
 
