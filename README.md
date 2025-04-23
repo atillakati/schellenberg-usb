@@ -32,17 +32,6 @@ stateDiagram-v2
     [*] --> Unknown
 ```
 
-## API
-
-|REST call | Description |
-|--|--|
-|GET http://<hostip>:5080/schellenberg/ | Get status info, response is a json <br> <pre> { <br> &emsp; "version": "0.1.0",<br>  &emsp; "lastUpdate": "2025-01-31T15:21:26.363619+00:00",<br> &emsp; "name": "Schellenberg Rollodrive Premium",<br> &emsp; "message": "usbdev1.4",<br> &emsp; "fsm_state": "Idle"<br> }</pre> |
-|POST http://<hostip>:5080/schellenberg/pair | Pair the cover drive with the RF Usb stick, under construction (payload should be the unique device ID) |
-|GET http://<hostip>:5080/schellenberg/up | Drive the cover up, response is a updated json |
-|GET http://<hostip>:5080/schellenberg/stop | Stop the cover driving, response is a updated json |
-|GET http://<hostip>:5080/schellenberg/down | Drive the cover down, response is a updated json |
-
-
 ## Docker image for RaspberryPI
 
 https://hub.docker.com/repository/docker/atilladocker/schellenberg-web2rf-api
@@ -131,3 +120,15 @@ services:
 ```bash
 docker compose -f docker-compose.yaml up -d
 ```
+## API
+
+|REST call | Description |
+|--|--|
+|GET http://hostip:5080/schellenberg/ | Get status info, response is a json <br> <pre> { <br> &emsp; "version": "0.1.0",<br>  &emsp; "lastUpdate": "2025-01-31T15:21:26.363619+00:00",<br> &emsp; "name": "Schellenberg Rollodrive Premium",<br> &emsp; "message": "usbdev1.4",<br> &emsp; "fsm_state": "Idle"<br> }</pre> |
+|POST http://hostip:5080/schellenberg/pair | Pair the cover drive with the RF Usb stick, under construction (payload should be the unique device ID) |
+|GET http://hostip:5080/schellenberg/up | Drive the cover up, response is a updated json |
+|GET http://hostip:5080/schellenberg/stop | Stop the cover driving, response is a updated json |
+|GET http://hostip:5080/schellenberg/down | Drive the cover down, response is a updated json |
+
+
+The calls up, down and stop will work after the device is paired.
