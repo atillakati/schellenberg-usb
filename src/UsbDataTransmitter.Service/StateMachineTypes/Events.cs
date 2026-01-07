@@ -2,7 +2,7 @@
 {
     public enum Events
     {
-        MoveUpReceived,
+              MoveUpReceived,
         StopReceived,
         MoveDownReceived,
         PairingStartedReceived,
@@ -11,6 +11,13 @@
         StopPressed,
         Started,
         Paired,
-        Init
+        Init,
+
+        /// <summary>
+        /// Wird ausgelöst, um den Rolladen auf eine prozentuale Position zu fahren.
+        /// Diese Implementierung wird im Service durch eine Timer‑Logik verarbeitet.
+        /// </summary>
+            MoveToPercentReceived
     }
+
 }
