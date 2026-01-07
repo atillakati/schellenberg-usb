@@ -1,4 +1,5 @@
 ﻿using UsbDataTransmitter.Service.StateMachineTypes;
+using System.Threading.Tasks;
 
 namespace UsbDataTransmitter.Service.Services
 {
@@ -8,10 +9,14 @@ namespace UsbDataTransmitter.Service.Services
         string DeviceName { get; }
 
         States CurrentFsmState { get; }
+                int CurrentPosition { get; }
+        Task MoveToAsync(int percent);
+
       
         void FireEvent(Events eventToFire);
 
         //void Close();
         //void Init();
     }
+
 }
