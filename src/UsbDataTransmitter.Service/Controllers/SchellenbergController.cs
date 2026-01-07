@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using UsbDataTransmitter.Service.Entities;
 using UsbDataTransmitter.Service.Services;
+using System.Threading.Tasks;
 using UsbDataTransmitter.Service.StateMachineTypes;
 
 namespace UsbDataTransmitter.Service.Controllers
@@ -31,6 +32,8 @@ namespace UsbDataTransmitter.Service.Controllers
                 lastUpdate = DateTime.Now,
                 message = _schellenbergService.Info,
                 name = _schellenbergService.DeviceName,
+                                position = _schellenbergService.CurrentPosition,
+
                 version = VERSION,
                 fsm_state = _schellenbergService.CurrentFsmState.ToString()
             };
@@ -74,9 +77,28 @@ namespace UsbDataTransmitter.Service.Controllers
                 lastUpdate = DateTime.Now,
                 message = $"Move {direction}",
                 name = _schellenbergService.DeviceName,
-                version = VERSION,
-                fsm_state = _schellenbergService.CurrentFsmState.ToString() 
+                version = VERSION,,
+                fsm_state = _schellenbergService.CurrentFsmState.ToString() ,
+                       position = _schellenbergService.CurrentPosition
+
+
             };
         }        
     }
 }
+    [HttpGet("moveTo/{percent}")]
+    public async Task<DeviceInfo> MoveTo(int percent)
+    {
+        _logger.LogInformation($"MoveTo({percent}) called.");
+        await _schellenbergService.MoveToAsync(percent);
+        return new DeviceInfo
+        {
+            lastUpdate = DateTime.Now,
+            message = $"MoveTo({percent})",
+            name = _schellenbergService.DeviceName,
+            version = VERSION,
+            fsm_state = _schellenbergService.CurrentFsmState.ToString(),
+            position = _schellenbergService.CurrentPosition
+        };
+    }
+
