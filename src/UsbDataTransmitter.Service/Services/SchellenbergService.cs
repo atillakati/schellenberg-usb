@@ -1,6 +1,9 @@
 ﻿using Stateless;
 using Stateless.Graph;
-using System.Text;
+ususing System.Text;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using UsbDataTransmitter.SchellenbergDevices;
 using UsbDataTransmitter.Service.StateMachineTypes;
 
@@ -13,6 +16,16 @@ namespace UsbDataTransmitter.Service.Services
         private readonly IDevice _device;
         private bool _isPaired;
         private StateMachine<States, Events> _fsm;
+                private double _fullTravelTime = 16.0;
+        private int _currentPosition = 0;
+        private DateTime? _movementStart = null;
+        private int _targetPosition = 0;
+        private string _currentDirection = null;
+        private double _fullTravelTimeUp = 16.0;
+        private double _fullTravelTimeDown = 16.0;
+        private TaskCompletionSource<bool> _calibrationStopTcs;
+
+
 
 
         public SchellenbergService(ILogger<SchellenbergService> logger, IUsbStick usbStick)
@@ -58,10 +71,60 @@ namespace UsbDataTransmitter.Service.Services
         }
 
         public States CurrentFsmState => _fsm.State;
-                
-        public void FireEvent(Events eventToFire)
-        {
-            _logger.LogInformation($"FireEvent - Current State: {_fsm.State} Event: {eventToFire}");
+       {
+    _logger.LogInformation($"FireEvent - Current State: {_fsm.State} Event: {eventToFire}");
+
+    // Aktuelle Bewegung setzen oder Position nach Stop berechnen
+    switch (eventToFire)
+    {
+        case Events.MoveUpReceived:
+            _movementStart = DateTime.Now;
+            _currentDirection = "up";
+            break;
+        case Events.MoveDownReceived:
+            _movementStart = DateTime.Now;
+            _currentDirection = "down";
+            break;
+        case Events.StopReceived:
+        case Events.StopPressed:
+            if (_movementStart.HasValue)
+            {
+                var elapsed = DateTime.Now - _movementStart.Value;
+                double denominator;
+                if (_currentDirection == "down")
+                {
+                    denominator = _fullTravelTimeDown > 0 ? _fullTravelTimeDown : _fullTravelTime;
+                }
+                else if (_currentDirection == "up")
+                {
+                    denominator = _fullTravelTimeUp > 0 ? _fullTravelTimeUp : _fullTravelTime;
+                }
+                else
+                {
+                    denominator = _fullTravelTime;
+                }
+                var deltaPercent = elapsed.TotalSeconds / denominator * 100.0;
+                if (_targetPosition.HasValue)
+                {
+                    _currentPosition = _targetPosition.Value;
+                    _targetPosition = null;
+                }
+                else if (_currentDirection == "down")
+                {
+                    _currentPosition = Math.Min(100, _currentPosition + (int)Math.Round(deltaPercent));
+                }
+                else if (_currentDirection == "up")
+                {
+                    _currentPosition = Math.Max(0, _currentPosition - (int)Math.Round(deltaPercent));
+                }
+                _movementStart = null;
+                _currentDirection = null;
+            }
+            _calibrationStopTcs?.TrySetResult(true);
+            break;
+    }
+    _fsm?.Fire(eventToFire);
+}    _logger.LogInformation($"FireEvent - Current State: {_fsm.State} Event: {eventToFire}");
             _fsm?.Fire(eventToFire);
         }
 
@@ -199,3 +262,4 @@ namespace UsbDataTransmitter.Service.Services
         
     }
 }
+
